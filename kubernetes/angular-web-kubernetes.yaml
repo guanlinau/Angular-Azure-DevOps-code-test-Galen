@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: angular-web-deployment
+    namespace: angular-web-ns
+    labels:
+        app: angular-web
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            app: angular-web
+    template:
+        metadata:
+            labels:
+                app: angular-web
+        spec:
+            imagePullSecrets:
+                - name: my-registry-key
+            containers:
+                - name: angular-web
+                  image: $ACR_SERVER/$ACR_REPO_NAME:$IMAGE_VERSION
+                  imagePullPolicy: Always
+                  ports:
+                      - containerPort: 80
+                  livenessProbe:
+                      initialDelaySeconds: 5
+                      periodSeconds: 5
+                      httpGet:
+                          path: /
+                          port: 80
+                  readinessProbe:
+                      initialDelaySeconds: 5
+                      periodSeconds: 5
+                      httpGet:
+                          path: /
+                          port: 80
+                  resources:
+                      requests:
+                          cpu: 100m
+                          memory: 64Mi
+                      limits:
+                          cpu: 200m
+                          memory: 128Mi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+    name: angular-web-service
+    namespace: angular-web-ns
+    labels:
+        app: angular-web
+spec:
+    type: LoadBalancer
+    selector:
+        app: angular-web
+    ports:
+        - name: angular-web-service
+          protocol: TCP
+          port: 80
+          targetPort: 80
