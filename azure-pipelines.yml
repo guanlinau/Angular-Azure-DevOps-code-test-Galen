@@ -13,8 +13,11 @@ variables:
   dockerRegistryServiceConnection: '5e1f01e6-4395-4c31-8174-dd4474fc2ca1'
   imageRepository: 'acrreponame'
   containerRegistry: 'angularwebacr.azurecr.io'
+  imagePullSecret: 'image_key'
   uatNamespace: 'angular-web-uat'
   proNamespace: 'angular-web-pro'
+  uatReplicasNumber: 1
+  proReplicasNumber: 2
   dockerfilePath: '$(Build.SourcesDirectory)/Dockerfile'
   uatEnvironment: 'uat'
   proEnvironment: 'pro'
@@ -51,7 +54,12 @@ stages:
   displayName: Deploy to UAT stage
   dependsOn: Build
   variables:
-    imagePullSecret: 'image_key'
+    imagePullSecret: $(imagePullSecret)
+    angular_web_env: $(uatNamespace)
+    replica_number: $(uatReplicasNumber)
+    acr_server: $(dockerRegistryServiceConnection)
+    acr_repo_name: $(imageRepository)
+    image_version: $(tag)
   jobs:
   - deployment: Deploy Deploy to UAT envrionment
     displayName: Deploy to UAT envrionment
@@ -74,6 +82,24 @@ stages:
               secretName: $(imagePullSecret)
               namespace: $(uatNamespace)
               dockerRegistryEndpoint: $(dockerRegistryServiceConnection)
+          
+          - task: replacetokens@5
+            displayName: Replace Variables
+            inputs:
+              rootDirectory: '$(Build.SourcesDirectory)/manifests'
+              targetFiles: 'kubernetes.yaml'
+              encoding: 'auto'
+              tokenPattern: 'custom'
+              tokenPrefix: '$'
+              tokenSuffix: '$'
+              writeBOM: true
+              actionOnMissing: 'warn'
+              keepToken: false
+              actionOnNoFiles: 'continue'
+              enableTransforms: false
+              enableRecursion: false
+              useLegacyPattern: false
+              enableTelemetry: true
 
           - task: KubernetesManifest@0
             displayName: Deploy to Kubernetes cluster
@@ -84,5 +110,5 @@ stages:
                 $(System.ArtifactsDirectory)/manifests/kubernetes.yaml
               imagePullSecrets: |
                 $(imagePullSecret)
-              containers: |
-                $(containerRegistry)/$(imageRepository):$(tag)
+              # containers: |
+              #   $(containerRegistry)/$(imageRepository):$(tag)
