@@ -2,9 +2,9 @@
 
 # trigger:
 # - master
-#trigger: none
-trigger:
-- Augular-DevOps-YAML-pipleine-Galen
+trigger: none
+# trigger:
+# - Augular-DevOps-YAML-pipleine-Galen
 resources:
 - repo: self
 
@@ -13,7 +13,7 @@ variables:
   dockerRegistryServiceConnection: '5e1f01e6-4395-4c31-8174-dd4474fc2ca1'
   imageRepository: 'acrreponame'
   containerRegistry: 'angularwebacr.azurecr.io'
-  imagePullSecret: 'image_key'
+  imageSecret: 'image_key'
   uatNamespace: 'angular-web-uat'
   proNamespace: 'angular-web-pro'
   uatReplicasNumber: 1
@@ -45,10 +45,8 @@ stages:
         tags: |
           $(tag)
 
-    - script: ls -al $(Build.SourcesDirectory)
-      displayName: 'List directory contents'
-
     - task: PublishPipelineArtifact@1
+      displayName: Publish the manifests folder to pipeline
       inputs:
         targetPath: '$(Build.SourcesDirectory)/manifests'
         artifact: 'manifests'
@@ -58,7 +56,7 @@ stages:
   displayName: Deploy to UAT stage
   dependsOn: Build
   variables:
-    imagePullSecret: $(imagePullSecret)
+    imagePullSecret: $(imageSecret)
     angular_web_env: $(uatNamespace)
     replica_number: $(uatReplicasNumber)
     acr_server: $(dockerRegistryServiceConnection)
@@ -86,6 +84,7 @@ stages:
               secretName: $(imagePullSecret)
               namespace: $(uatNamespace)
               dockerRegistryEndpoint: $(dockerRegistryServiceConnection)
+              kubernetesServiceConnection:
           
           - task: replacetokens@5
             displayName: Replace Variables
