@@ -13,7 +13,7 @@ variables:
   dockerRegistryServiceConnection: '5e1f01e6-4395-4c31-8174-dd4474fc2ca1'
   imageRepository: 'acrreponame'
   containerRegistry: 'angularwebacr.azurecr.io'
-  imageSecret: 'image_key'
+  imageSecret: 'image-key'
   uatNamespace: 'angular-web-uat'
   proNamespace: 'angular-web-pro'
   uatReplicasNumber: 1
@@ -57,11 +57,11 @@ stages:
   dependsOn: Build
   variables:
     imagePullSecret: $(imageSecret)
-    angular_web_env: $(uatNamespace)
-    replica_number: $(uatReplicasNumber)
-    acr_server: $(dockerRegistryServiceConnection)
-    acr_repo_name: $(imageRepository)
-    image_version: $(tag)
+    angular-web-env: $(uatNamespace)
+    replica-number: $(uatReplicasNumber)
+    acr-server: $(dockerRegistryServiceConnection)
+    acr-repo-name: $(imageRepository)
+    image-version: $(tag)
   jobs:
   - deployment: Deploy_to_UAT
     displayName: Deploy to UAT envrionment
