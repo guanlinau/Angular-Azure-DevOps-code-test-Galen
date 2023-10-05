@@ -11,7 +11,7 @@ resources:
 variables:
   # Container registry service connection established during pipeline creation
   dockerRegistryServiceConnection: '5e1f01e6-4395-4c31-8174-dd4474fc2ca1'
-  imageRepository: 'acrreponame'
+  imageRepository: 'angularrepo'
   containerRegistry: 'angularwebacr.azurecr.io'
   imageSecret: 'image-key'
   uatNamespace: 'angular-web-uat'
@@ -59,7 +59,7 @@ stages:
     imagePullSecret: $(imageSecret)
     angular-web-env: $(uatNamespace)
     replica-number: $(uatReplicasNumber)
-    acr-server: $(dockerRegistryServiceConnection)
+    acr-server: $(containerRegistry)
     acr-repo-name: $(imageRepository)
     image-version: $(tag)
   jobs:
@@ -113,4 +113,4 @@ stages:
               imagePullSecrets: |
                 $(imagePullSecret)
               containers: |
-                $(acr_server)/$(acr_repo_name):$(image_version)
+                $(containerRegistry)/$(imageRepository):$(tag)
