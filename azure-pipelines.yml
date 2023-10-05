@@ -46,9 +46,8 @@ stages:
           $(tag)
     - task: PublishPipelineArtifact@1
       inputs:
-        targetPath: '$(Build.SourcesDirectory)/manifests'
-        artifact: 'manifests'
-        publishLocation: 'pipeline'
+        artifactName: 'manifests'
+        path: 'manifests'
 
 - stage: Deploy_to_UAT 
   displayName: Deploy to UAT stage
