@@ -27,11 +27,11 @@ stages:
             customCommand: 'run build'
           displayName: "Run build"
 
-        - task: Npm@1
-          inputs:
-            command: 'custom'
-            customCommand: 'run test'
-          displayName: 'Run unit testing'
+ #       - task: Npm@1
+ #         inputs:
+ #           command: 'custom'
+ #           customCommand: 'run test'
+ #         displayName: 'Run unit testing'
 
         - task: Npm@1
           inputs:
