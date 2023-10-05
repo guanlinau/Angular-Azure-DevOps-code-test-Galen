@@ -88,7 +88,7 @@ stages:
           - task: replacetokens@5
             displayName: Replace Variables
             inputs:
-              rootDirectory: '$(Build.SourcesDirectory)/manifests'
+              rootDirectory: '$(System.ArtifactsDirectory)/manifests'
               targetFiles: 'kubernetes.yaml'
               encoding: 'auto'
               tokenPattern: 'custom'
