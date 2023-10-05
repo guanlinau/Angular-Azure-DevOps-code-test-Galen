@@ -44,71 +44,75 @@ stages:
         containerRegistry: $(dockerRegistryServiceConnection)
         tags: |
           $(tag)
-    - task: PublishPipelineArtifact@1
-      inputs:
-        targetPath: '$(Build.SourcesDirectory)/manifests'
-        artifact: 'manifests'
-        publishLocation: 'pipeline'
 
-- stage: Deploy_to_UAT 
-  displayName: Deploy to UAT stage
-  dependsOn: Build
-  variables:
-    imagePullSecret: $(imagePullSecret)
-    angular_web_env: $(uatNamespace)
-    replica_number: $(uatReplicasNumber)
-    acr_server: $(dockerRegistryServiceConnection)
-    acr_repo_name: $(imageRepository)
-    image_version: $(tag)
-  jobs:
-  - deployment: Deploy_to_UAT
-    displayName: Deploy to UAT envrionment
-    pool:
-      vmImage: $(vmImageName)
-    environment: $(uatEnvironment)
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-          - task: DownloadPipelineArtifact@2
-            inputs:
-              artifactName: 'manifests'
-              downloadPath: '$(System.ArtifactsDirectory)/manifests'
+    - script: ls -al $(Build.SourcesDirectory)
+      displayName: 'List directory contents'
 
-          - task: KubernetesManifest@0
-            displayName: Create imagePullSecret
-            inputs:
-              action: createSecret
-              secretName: $(imagePullSecret)
-              namespace: $(uatNamespace)
-              dockerRegistryEndpoint: $(dockerRegistryServiceConnection)
+    # - task: PublishPipelineArtifact@1
+    #   inputs:
+    #     targetPath: '$(Build.SourcesDirectory)/manifests'
+    #     artifact: 'manifests'
+    #     publishLocation: 'pipeline'
+
+# - stage: Deploy_to_UAT 
+#   displayName: Deploy to UAT stage
+#   dependsOn: Build
+#   variables:
+#     imagePullSecret: $(imagePullSecret)
+#     angular_web_env: $(uatNamespace)
+#     replica_number: $(uatReplicasNumber)
+#     acr_server: $(dockerRegistryServiceConnection)
+#     acr_repo_name: $(imageRepository)
+#     image_version: $(tag)
+#   jobs:
+#   - deployment: Deploy_to_UAT
+#     displayName: Deploy to UAT envrionment
+#     pool:
+#       vmImage: $(vmImageName)
+#     environment: $(uatEnvironment)
+#     strategy:
+#       runOnce:
+#         deploy:
+#           steps:
+#           - task: DownloadPipelineArtifact@2
+#             inputs:
+#               artifactName: 'manifests'
+#               downloadPath: '$(System.ArtifactsDirectory)/manifests'
+
+#           - task: KubernetesManifest@0
+#             displayName: Create imagePullSecret
+#             inputs:
+#               action: createSecret
+#               secretName: $(imagePullSecret)
+#               namespace: $(uatNamespace)
+#               dockerRegistryEndpoint: $(dockerRegistryServiceConnection)
           
-          - task: replacetokens@5
-            displayName: Replace Variables
-            inputs:
-              rootDirectory: '$(Build.SourcesDirectory)/manifests'
-              targetFiles: 'kubernetes.yaml'
-              encoding: 'auto'
-              tokenPattern: 'custom'
-              tokenPrefix: '$'
-              tokenSuffix: '$'
-              writeBOM: true
-              actionOnMissing: 'warn'
-              keepToken: false
-              actionOnNoFiles: 'continue'
-              enableTransforms: false
-              enableRecursion: false
-              useLegacyPattern: false
-              enableTelemetry: true
+#           - task: replacetokens@5
+#             displayName: Replace Variables
+#             inputs:
+#               rootDirectory: '$(Build.SourcesDirectory)/manifests'
+#               targetFiles: 'kubernetes.yaml'
+#               encoding: 'auto'
+#               tokenPattern: 'custom'
+#               tokenPrefix: '$'
+#               tokenSuffix: '$'
+#               writeBOM: true
+#               actionOnMissing: 'warn'
+#               keepToken: false
+#               actionOnNoFiles: 'continue'
+#               enableTransforms: false
+#               enableRecursion: false
+#               useLegacyPattern: false
+#               enableTelemetry: true
 
-          - task: KubernetesManifest@0
-            displayName: Deploy to Kubernetes cluster
-            inputs:
-              action: deploy
-              namespace: $(uatNamespace)
-              manifests: |
-                $(System.ArtifactsDirectory)/manifests/kubernetes.yaml
-              imagePullSecrets: |
-                $(imagePullSecret)
-              containers: |
-                $(acr_server)/$(acr_repo_name):$(image_version)
+#           - task: KubernetesManifest@0
+#             displayName: Deploy to Kubernetes cluster
+#             inputs:
+#               action: deploy
+#               namespace: $(uatNamespace)
+#               manifests: |
+#                 $(System.ArtifactsDirectory)/manifests/kubernetes.yaml
+#               imagePullSecrets: |
+#                 $(imagePullSecret)
+#               containers: |
+#                 $(acr_server)/$(acr_repo_name):$(image_version)
