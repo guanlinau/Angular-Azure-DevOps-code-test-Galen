@@ -20,19 +20,19 @@ spec:
                   image: $acr-server$/$acr-repo-name$:$image-version$
                   imagePullPolicy: Always
                   ports:
-                      - containerPort: 8080
+                      - containerPort: 80
                   livenessProbe:
                       initialDelaySeconds: 5
                       periodSeconds: 5
                       httpGet:
                           path: /
-                          port: 8080
+                          port: 80
                   readinessProbe:
                       initialDelaySeconds: 5
                       periodSeconds: 5
                       httpGet:
                           path: /
-                          port: 8080
+                          port: 80
                   resources:
                       requests:
                           cpu: 100m
@@ -57,4 +57,4 @@ spec:
         - name: angular-web-service
           protocol: TCP
           port: 80
-          targetPort: 8080
+          targetPort: 80

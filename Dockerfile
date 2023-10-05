@@ -15,29 +15,30 @@ FROM nginx:1.25.2-alpine
 RUN mkdir -p /usr/share/nginx/html
 
 # Create a new group and user
-RUN addgroup -S frontier && adduser -S frontier -G frontier
+# RUN addgroup -S frontier && adduser -S frontier -G frontier
 
 # Change the ownership for nginx required directories and files
-RUN chown -R frontier:frontier /usr/share/nginx/html \
-    && chown -R frontier:frontier /var/cache/nginx \
-    && chown -R frontier:frontier /var/log/nginx \
-	&& chown -R frontier:frontier /etc/nginx/conf.d
-
-# Modify default Nginx config to listen on 8080
-RUN sed -i 's/listen 80;/listen 8080;/g' /etc/nginx/conf.d/default.conf
+# RUN chown -R frontier:frontier /usr/share/nginx/html \
+#     && chown -R frontier:frontier /var/cache/nginx \
+#     && chown -R frontier:frontier /var/log/nginx \
+# 	&& chown -R frontier:frontier /etc/nginx/conf.d
 
 # Allow nginx to write to the pid directory
-RUN touch /var/run/nginx.pid && \
-        chown -R frontier:frontier /var/run/nginx.pid
+# RUN touch /var/run/nginx.pid && \
+#         chown -R frontier:frontier /var/run/nginx.pid
+
+# Modify default Nginx config to listen on 8080
+# RUN sed -i 's/listen 80;/listen 8080;/g' /etc/nginx/conf.d/default.conf
 
 # Switch to the new user
-USER frontier
+# USER frontier
 
 # Expose the running port
-EXPOSE 8080
+EXPOSE 80
 
 # Copy the files from the build stage
-COPY --from=builder --chown=frontier:frontier app/dist/angular11-testing-examples /usr/share/nginx/html
+# COPY --from=builder --chown=frontier:frontier app/dist/angular11-testing-examples /usr/share/nginx/html
+COPY --from=builder app/dist/angular11-testing-examples /usr/share/nginx/html
 
 # Start nginx
 CMD ["nginx","-g", "daemon off;"]
