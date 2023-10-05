@@ -50,7 +50,7 @@ stages:
         artifact: 'manifests'
         publishLocation: 'pipeline'
 
-- stage: Deploy to UAT 
+- stage: Deploy_to_UAT 
   displayName: Deploy to UAT stage
   dependsOn: Build
   variables:
@@ -61,7 +61,7 @@ stages:
     acr_repo_name: $(imageRepository)
     image_version: $(tag)
   jobs:
-  - deployment: Deploy Deploy to UAT envrionment
+  - deployment: Deploy to UAT envrionment
     displayName: Deploy to UAT envrionment
     pool:
       vmImage: $(vmImageName)
