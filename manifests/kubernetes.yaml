@@ -15,8 +15,6 @@ spec:
             labels:
                 app: angular-web
         spec:
-            imagePullSecrets:
-                - name: image-key
             containers:
                 - name: angular-web
                   image: $acr-server$/$acr-repo-name$:$image-version$
