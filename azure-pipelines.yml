@@ -2,9 +2,9 @@
 
 # trigger:
 # - master
-trigger: none
-# trigger:
-# - Augular-DevOps-YAML-pipleine-Galen
+# trigger: none
+trigger:
+- Augular-DevOps-YAML-pipleine-Galen
 resources:
 - repo: self
 
@@ -19,8 +19,8 @@ variables:
   uatReplicasNumber: 1
   proReplicasNumber: 2
   dockerfilePath: '$(Build.SourcesDirectory)/Dockerfile'
-  uatEnvironment: 'uat'
-  proEnvironment: 'pro'
+  uatEnvironment: 'uat.angular-web-uat'
+  proEnvironment: 'pro.angular-web-pro'
   tag: '$(Build.BuildId)'
 
   # Agent VM image name
@@ -84,7 +84,6 @@ stages:
               secretName: $(imagePullSecret)
               namespace: $(uatNamespace)
               dockerRegistryEndpoint: $(dockerRegistryServiceConnection)
-              kubernetesServiceConnection:
           
           - task: replacetokens@5
             displayName: Replace Variables
