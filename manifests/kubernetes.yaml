@@ -2,11 +2,11 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
     name: angular-web-deployment
-    namespace: $angular_web_env$
+    namespace: $angular-web-env$
     labels:
         app: angular-web
 spec:
-    replicas: $replica_number$
+    replicas: $replica-number$
     selector:
         matchLabels:
             app: angular-web
@@ -16,10 +16,10 @@ spec:
                 app: angular-web
         spec:
             imagePullSecrets:
-                - name: image_key
+                - name: image-key
             containers:
                 - name: angular-web
-                  image: $acr_server$/$acr_repo_name$:$image_version$
+                  image: $acr-server$/$acr-repo-name$:$image-version$
                   imagePullPolicy: Always
                   ports:
                       - containerPort: 80
@@ -48,7 +48,7 @@ apiVersion: v1
 kind: Service
 metadata:
     name: angular-web-service
-    namespace: $angular_web_env$
+    namespace: $angular-web-env$
     labels:
         app: angular-web
 spec:
