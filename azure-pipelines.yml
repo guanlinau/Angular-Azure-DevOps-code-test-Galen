@@ -6,10 +6,10 @@ pool:
   vmImage: ubuntu-latest
 
 stages:
-  - stage: "Preparetion"
+  - stage: "Preparetion_and_test"
     displayName: "Preparetion"
     jobs:
-      - job: "Preparetion"
+      - job: "Preparetion_and_test"
         displayName: "Preparetion"
         steps:
 
@@ -44,10 +44,10 @@ stages:
             ng test --code-coverage        
           displayName: 'npm install angular/cli and assessing code coverage'
         
-  - stage: "Build and push docker image"
+  - stage: "Build_and_push"
     displayName: "Build and push docker image"
     jobs:
-      - job: "Build"
+      - job: "Build_and_push"
         displayName: "Build and push docker image"
         steps:
         - task: NodeTool@0
