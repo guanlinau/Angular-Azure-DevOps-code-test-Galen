@@ -13,7 +13,6 @@ variables:
   dockerRegistryServiceConnection: '5e1f01e6-4395-4c31-8174-dd4474fc2ca1'
   imageRepository: 'acrreponame'
   containerRegistry: 'angularwebacr.azurecr.io'
-  imagePullSecret: 'image_key'
   uatNamespace: 'angular-web-uat'
   proNamespace: 'angular-web-pro'
   dockerfilePath: '$(Build.SourcesDirectory)/Dockerfile'
@@ -51,12 +50,14 @@ stages:
 - stage: Deploy to UAT 
   displayName: Deploy to UAT stage
   dependsOn: Build
+  variables:
+    imagePullSecret: 'image_key'
   jobs:
   - deployment: Deploy Deploy to UAT envrionment
     displayName: Deploy to UAT envrionment
     pool:
       vmImage: $(vmImageName)
-    environment: 'uatEnvironment' 
+    environment: $(uatEnvironment)
     strategy:
       runOnce:
         deploy:
