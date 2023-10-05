@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
     name: angular-web-deployment
-    namespace: angular-web-ns
+    namespace: $ANGULAR_WEB_ENV
     labels:
         app: angular-web
 spec:
@@ -16,7 +16,7 @@ spec:
                 app: angular-web
         spec:
             imagePullSecrets:
-                - name: my-registry-key
+                - name: image_key
             containers:
                 - name: angular-web
                   image: $ACR_SERVER/$ACR_REPO_NAME:$IMAGE_VERSION
@@ -48,7 +48,7 @@ apiVersion: v1
 kind: Service
 metadata:
     name: angular-web-service
-    namespace: angular-web-ns
+    namespace: $ANGULAR_WEB_ENV
     labels:
         app: angular-web
 spec:
