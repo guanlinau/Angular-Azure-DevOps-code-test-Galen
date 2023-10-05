@@ -2,9 +2,9 @@
 
 # trigger:
 # - master
-trigger: none
-# trigger:
-# - azure-pipelines-docker
+#trigger: none
+trigger:
+- azure-pipelines-docker
 resources:
 - repo: self
 
@@ -110,5 +110,5 @@ stages:
                 $(System.ArtifactsDirectory)/manifests/kubernetes.yaml
               imagePullSecrets: |
                 $(imagePullSecret)
-              # containers: |
-              #   $(containerRegistry)/$(imageRepository):$(tag)
+              containers: |
+                $(acr_server)/$(acr_repo_name):$(image_version)
