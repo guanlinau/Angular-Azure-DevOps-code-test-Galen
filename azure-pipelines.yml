@@ -26,13 +26,17 @@ stages:
           inputs:
             command: 'custom'
             customCommand: 'run build'
-          displayName: "Run build"
+          displayName: "Run build for compiling"
 
         # - task: Npm@1
         #   inputs:
         #     command: 'custom'
         #     customCommand: 'run test -- --no-watch --single-run --verbose'
         #   displayName: 'Run unit testing'
+        - script: |
+            npm install -g @angular/cli
+            ng test --no-watch --single-run --verbose       
+          displayName: 'Run unit testing'
 
         - task: Npm@1
           inputs:
