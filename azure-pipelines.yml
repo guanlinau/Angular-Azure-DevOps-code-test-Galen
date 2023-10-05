@@ -31,7 +31,7 @@ stages:
         - task: Npm@1
           inputs:
             command: 'custom'
-            customCommand: 'npm run test -- --no-watch --single-run'
+            customCommand: 'run test -- --no-watch --single-run'
           displayName: 'Run unit testing'
 
         - task: Npm@1
