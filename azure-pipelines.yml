@@ -2,9 +2,9 @@
 
 # trigger:
 # - master
-
-trigger:
-- azure-pipelines-docker
+trigger: none
+# trigger:
+# - azure-pipelines-docker
 resources:
 - repo: self
 
@@ -13,6 +13,9 @@ variables:
   dockerRegistryServiceConnection: '5e1f01e6-4395-4c31-8174-dd4474fc2ca1'
   imageRepository: 'acrreponame'
   containerRegistry: 'angularwebacr.azurecr.io'
+  imagePullSecret: 'image_key'
+  uatNamespace: 'angular-web-uat'
+  proNamespace: 'angular-web-pro'
   dockerfilePath: '$(Build.SourcesDirectory)/Dockerfile'
   tag: '$(Build.BuildId)'
 
@@ -37,3 +40,46 @@ stages:
         containerRegistry: $(dockerRegistryServiceConnection)
         tags: |
           $(tag)
+    - task: PublishPipelineArtifact@1
+      inputs:
+        targetPath: '$(Build.SourcesDirectory)/manifests'
+        artifact: 'manifests'
+        publishLocation: 'pipeline'
+
+- stage: Deploy to UAT 
+  displayName: Deploy to UAT stage
+  dependsOn: Build
+  jobs:
+  - deployment: Deploy Deploy to UAT envrionment
+    displayName: Deploy to UAT envrionment
+    pool:
+      vmImage: $(vmImageName)
+    environment: 'myenv.aksnamespace' #customize with your environment
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: DownloadPipelineArtifact@2
+            inputs:
+              artifactName: 'manifests'
+              downloadPath: '$(System.ArtifactsDirectory)/manifests'
+
+          - task: KubernetesManifest@0
+            displayName: Create imagePullSecret
+            inputs:
+              action: createSecret
+              secretName: $(imagePullSecret)
+              namespace: $(uatNamespace)
+              dockerRegistryEndpoint: $(dockerRegistryServiceConnection)
+
+          - task: KubernetesManifest@0
+            displayName: Deploy to Kubernetes cluster
+            inputs:
+              action: deploy
+              namespace: $(uatNamespace)
+              manifests: |
+                $(System.ArtifactsDirectory)/manifests/kubernetes.yaml
+              imagePullSecrets: |
+                $(imagePullSecret)
+              containers: |
+                $(containerRegistry)/$(imageRepository):$(tag)
