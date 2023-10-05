@@ -23,6 +23,9 @@ RUN chown -R frontier:frontier /usr/share/nginx/html \
     && chown -R frontier:frontier /var/log/nginx \
 	&& chown -R frontier:frontier /etc/nginx/conf.d
 
+# Modify default Nginx config to listen on 8080
+RUN sed -i 's/listen 80;/listen 8080;/g' /etc/nginx/conf.d/default.conf
+
 # Allow nginx to write to the pid directory
 RUN touch /var/run/nginx.pid && \
         chown -R frontier:frontier /var/run/nginx.pid
@@ -31,7 +34,7 @@ RUN touch /var/run/nginx.pid && \
 USER frontier
 
 # Expose the running port
-EXPOSE 80
+EXPOSE 8080
 
 # Copy the files from the build stage
 COPY --from=builder --chown=frontier:frontier app/dist/angular11-testing-examples /usr/share/nginx/html
