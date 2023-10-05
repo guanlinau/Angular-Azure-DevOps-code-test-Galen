@@ -1,0 +1,60 @@
+
+trigger: 
+ - azure-pipelines
+
+pool:
+  vmImage: ubuntu-latest
+
+stages:
+  - stage: "Preparetion"
+    displayName: "Preparetion"
+    jobs:
+      - job: "Preparetion"
+        displayName: "Preparetion"
+        steps:
+
+        - task: NodeTool@0
+          inputs:
+            versionSource: 'spec'
+            versionSpec: '14.x'
+          displayName: 'Install Node.js'
+        - task: Npm@1
+          inputs:
+            command: 'install'
+        - task: Npm@1
+          inputs:
+            command: 'custom'
+            customCommand: 'run build'
+          displayName: "Run build"
+
+        - task: Npm@1
+          inputs:
+            command: 'custom'
+            customCommand: 'run test'
+          displayName: 'Run unit testing'
+
+        - task: Npm@1
+          inputs:
+            command: 'custom'
+            customCommand: 'run lint'
+          displayName: 'Run Linting and code quality analysis'
+        
+        - script: |
+            npm install -g @angular/cli
+            ng test --code-coverage        
+          displayName: 'npm install angular/cli and assessing code coverage'
+        
+  - stage: "Build and push docker image"
+    displayName: "Build and push docker image"
+    jobs:
+      - job: "Build"
+        displayName: "Build and push docker image"
+        steps:
+        - task: NodeTool@0
+          inputs:
+            versionSource: 'spec'
+            versionSpec: '14.x'
+          displayName: 'Install Node.js'
+
+        
+        
