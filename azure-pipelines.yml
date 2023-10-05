@@ -21,17 +21,18 @@ stages:
         - task: Npm@1
           inputs:
             command: 'install'
+          displayName: "Install dependencies"
         - task: Npm@1
           inputs:
             command: 'custom'
             customCommand: 'run build'
           displayName: "Run build"
 
- #       - task: Npm@1
- #         inputs:
- #           command: 'custom'
- #           customCommand: 'run test'
- #         displayName: 'Run unit testing'
+        - task: Npm@1
+          inputs:
+            command: 'custom'
+            customCommand: 'npm run test -- --no-watch --single-run'
+          displayName: 'Run unit testing'
 
         - task: Npm@1
           inputs:
@@ -41,7 +42,7 @@ stages:
         
         - script: |
             npm install -g @angular/cli
-            ng test --code-coverage        
+            ng test --code-coverage --no-watch --browsers=ChromeHeadless       
           displayName: 'npm install angular/cli and assessing code coverage'
         
   - stage: "Build_and_push"
