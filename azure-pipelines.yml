@@ -17,6 +17,8 @@ variables:
   uatNamespace: 'angular-web-uat'
   proNamespace: 'angular-web-pro'
   dockerfilePath: '$(Build.SourcesDirectory)/Dockerfile'
+  uatEnvironment: 'uat'
+  proEnvironment: 'pro'
   tag: '$(Build.BuildId)'
 
   # Agent VM image name
@@ -54,7 +56,7 @@ stages:
     displayName: Deploy to UAT envrionment
     pool:
       vmImage: $(vmImageName)
-    environment: 'myenv.aksnamespace' #customize with your environment
+    environment: 'uatEnvironment' 
     strategy:
       runOnce:
         deploy:
