@@ -35,7 +35,7 @@ stages:
         #   displayName: 'Run unit testing'
         - script: |
             npm install -g @angular/cli
-            ng test --no-watch --single-run --verbose       
+            ng test --watch=false     
           displayName: 'Run unit testing'
 
         - task: Npm@1
