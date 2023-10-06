@@ -1,8 +1,8 @@
 # trigger:
 # - master
-# trigger: none
-trigger:
-    - Augular-DevOps-YAML-pipleine-Galen
+trigger: none
+# trigger:
+#     - Augular-DevOps-YAML-pipleine-Galen
 
 resources:
     - repo: self
@@ -30,7 +30,7 @@ variables:
 stages:
     - stage: Build
       displayName: Build and push stage
-    #   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+      #   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
       jobs:
           - job: Build
             displayName: Build
@@ -57,7 +57,7 @@ stages:
 
     - stage: Deploy_to_UAT
       displayName: Deploy to UAT stage
-    #   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+      #   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
       dependsOn: Build
       variables:
           imagePullSecret: $(imageSecret)
@@ -144,21 +144,21 @@ stages:
                       echo "Setting API_URL for e2e tests..."
                       sed -i "s,http://localhost:4200/,http://$SERVICE_IP/,g" e2e/protractor.conf.js
                   displayName: Set API URL for e2e tests
-                
+
                 - task: NodeTool@0
                   inputs:
-                      versionSource: 'spec'
-                      versionSpec: '14.x'
+                      versionSource: "spec"
+                      versionSpec: "14.x"
                   displayName: "Insall Node.js"
-                
+
                 - task: Npm@1
                   displayName: Install dependencies
                   inputs:
                       command: "install"
-                
+
                 - script: |
-                    node node_modules/.bin/webdriver-manager update --versions.chrome=114.0.5735.90
-                  displayName: 'update chrome version'
+                      node node_modules/.bin/webdriver-manager update --versions.chrome=117.0.5938.132
+                  displayName: "update chrome version"
 
                 - task: Npm@1
                   displayName: Run e2e tests
