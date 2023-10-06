@@ -144,6 +144,13 @@ stages:
                       echo "Setting API_URL for e2e tests..."
                       sed -i "s,http://localhost:4200/,http://$SERVICE_IP/,g" e2e/protractor.conf.js
                   displayName: Set API URL for e2e tests
+                
+                - task: NodeTool@0
+                  inputs:
+                      versionSource: 'spec'
+                      versionSpec: '14.x'
+                  displayName: "Insall Node.js"
+                
                 - task: Npm@1
                   displayName: Install dependencies
                   inputs:
