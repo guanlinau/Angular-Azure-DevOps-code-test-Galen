@@ -1,5 +1,92 @@
 parameters:
-    environment: ""
-    namespace: ""
-    replicasNumber: 0
-    environmentName: ""
+    - name: stageName
+      type: string
+      default: ""
+    - name: imagePullSecret
+      type: string
+      default: ""
+    - name: angular-web-env
+      type: string
+      default: ""
+    - name: replica-number
+      type: string
+      default: ""
+    - name: acr-server
+      type: string
+      default: ""
+    - name: acr-repo-name
+      type: string
+      default: ""
+    - name: image-version
+      type: string
+      default: ""
+    - name: vmImage
+      type: string
+      default: ""
+    - name: environment
+      type: string
+      default: ""
+    - name: dockerRegistryEndpoint
+      type: string
+      default: ""
+
+stages:
+    - stage: ${{parameters.stageName}}
+      displayName: ${{parameters.stageName}}
+      dependsOn: Build
+      variables:
+          imagePullSecret: ${{parameters.imagePullSecret}}
+          angular-web-env: ${{parameters.angular-web-env}}
+          replica-number: ${{parameters.replica-number}}
+          acr-server: ${{parameters.acr-server}}
+          acr-repo-name: ${{parameters.acr-repo-name}}
+          image-version: ${{parameters.image-version}}
+      jobs:
+          - deployment: ${{parameters.stageName}}
+            displayName: ${{parameters.stageName}}
+            pool:
+                vmImage: ${{parameters.vmImage}}
+            environment: ${{parameters.environment}}
+            strategy:
+                runOnce:
+                    deploy:
+                        steps:
+                            - task: DownloadPipelineArtifact@2
+                              inputs:
+                                  artifactName: "manifests"
+                                  downloadPath: "$(System.ArtifactsDirectory)/manifests"
+                            - task: KubernetesManifest@0
+                              displayName: Create imagePullSecret
+                              inputs:
+                                  action: createSecret
+                                  secretName: $(imagePullSecret)
+                                  namespace: ${{parameters.angular-web-env}}
+                                  dockerRegistryEndpoint: ${{parameters.dockerRegistryEndpoint}}
+                            - task: replacetokens@5
+                              displayName: Replace Variables
+                              inputs:
+                                  rootDirectory: "$(System.ArtifactsDirectory)/manifests"
+                                  targetFiles: "kubernetes.yaml"
+                                  encoding: "auto"
+                                  tokenPattern: "custom"
+                                  tokenPrefix: "$"
+                                  tokenSuffix: "$"
+                                  writeBOM: true
+                                  actionOnMissing: "warn"
+                                  keepToken: false
+                                  actionOnNoFiles: "continue"
+                                  enableTransforms: false
+                                  enableRecursion: false
+                                  useLegacyPattern: false
+                                  enableTelemetry: true
+                            - task: KubernetesManifest@0
+                              displayName: Deploy to Kubernetes cluster
+                              inputs:
+                                  action: deploy
+                                  namespace: ${{parameters.angular-web-env}}
+                                  manifests: |
+                                      $(System.ArtifactsDirectory)/manifests/kubernetes.yaml
+                                  imagePullSecrets: |
+                                      $(imagePullSecret)
+                                  containers: |
+                                      $(acr-server)/$(acr-repo-name):$(image-version)
