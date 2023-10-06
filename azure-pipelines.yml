@@ -28,15 +28,20 @@ stages:
             customCommand: 'run build'
           displayName: "Run build for compiling"
 
-        # - task: Npm@1
-        #   inputs:
-        #     command: 'custom'
-        #     customCommand: 'run test -- --watch=false --code-coverage'
-        #   displayName: 'Run unit testing'
+        - task: Npm@1
+          inputs:
+            command: 'custom'
+            customCommand: 'run test -- --watch=false --code-coverage'
+          displayName: 'Run unit testing'
         
         - script: |
             npm install -g @angular/cli
-            ng test --browsers=ChromeHeadless --code-coverage --watch=false     
+            ng test --browsers=ChromeHeadless --watch=false     
+          displayName: 'run unit tesing and access the code coverage'
+        
+        - script: |
+            npm install -g @angular/cli
+            ng test --code-coverage     
           displayName: 'run unit tesing and access the code coverage'
         
         - task: PublishCodeCoverageResults@1
