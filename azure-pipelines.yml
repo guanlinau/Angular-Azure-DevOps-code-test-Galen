@@ -10,7 +10,7 @@ stages:
     - stage: "Preparetion_and_test"
       displayName: "Preparetion"
       jobs:
-          - job: "Preparetion_and_test"
+          - job: "Compile_Test_Code_Analysis"
             displayName: "Preparetion and test"
             steps:
                 - task: NodeTool@0
@@ -29,9 +29,11 @@ stages:
                   displayName: "Run build for compiling"
 
                 - script: |
-                      #   npm install -g @angular/cli
-                        npx ng test --code-coverage --watch=false
+                      npx ng test --code-coverage --watch=false
                   displayName: "Run unit tesing and access the code coverage"
+
+                - script: ls -al test-results
+                  displayName: "List contents of test-results directory"
 
                 - task: PublishCodeCoverageResults@1
                   displayName: "Publish code coverage Angular results"
