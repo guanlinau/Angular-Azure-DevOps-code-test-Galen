@@ -1,8 +1,8 @@
 # trigger:
 # - master
-trigger: none
-# trigger:
-#     - Augular-DevOps-YAML-pipleine-Galen
+# trigger: none
+trigger:
+    - Augular-DevOps-YAML-pipleine-Galen
 
 resources:
     - repo: self
@@ -89,22 +89,21 @@ stages:
                                   dockerRegistryEndpoint: $(dockerRegistryServiceConnection)
 
                             - task: replacetokens@5
-                              displayName: Replace Variables
                               inputs:
-                                  rootDirectory: "$(System.ArtifactsDirectory)/manifests"
-                                  targetFiles: "kubernetes.yaml"
-                                  encoding: "auto"
-                                  tokenPattern: "custom"
-                                  tokenPrefix: "$"
-                                  tokenSuffix: "$"
-                                  writeBOM: true
-                                  actionOnMissing: "warn"
-                                  keepToken: false
-                                  actionOnNoFiles: "continue"
-                                  enableTransforms: false
-                                  enableRecursion: false
-                                  useLegacyPattern: false
-                                  enableTelemetry: true
+                                rootDirectory: '$(System.ArtifactsDirectory)/manifests'
+                                targetFiles: 'kubernetes.yaml'
+                                encoding: 'auto'
+                                tokenPattern: 'custom'
+                                tokenPrefix: '$'
+                                tokenSuffix: '$'
+                                writeBOM: true
+                                actionOnMissing: 'warn'
+                                keepToken: false
+                                actionOnNoFiles: 'continue'
+                                enableTransforms: false
+                                enableRecursion: false
+                                useLegacyPattern: false
+                                enableTelemetry: true
 
                             - task: KubernetesManifest@0
                               displayName: Deploy to Kubernetes cluster
