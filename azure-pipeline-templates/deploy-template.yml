@@ -1,0 +1,5 @@
+parameters:
+    environment: ""
+    namespace: ""
+    replicasNumber: 0
+    environmentName: ""
