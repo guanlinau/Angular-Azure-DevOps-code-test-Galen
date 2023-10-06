@@ -21,7 +21,7 @@ variables:
     dockerfilePath: "$(Build.SourcesDirectory)/Dockerfile"
     uatEnvironment: "uat.angular-web-uat"
     proEnvironment: "pro.angular-web-pro"
-    subscriptionName: "Pay-As-You-Go"
+    azureSubscriptionEndpoint: "e2e_azureSubscriptionEndpoint"
     resourcesGroupName: "angular-web-sg"
     aksClusterName: "angular-web-aks"
     clusterServiceName: "angular-web-service"
@@ -119,7 +119,7 @@ stages:
                   displayName: Get Service IP
                   inputs:
                       connectionType: "Azure Resource Manager"
-                      azureSubscriptionEndpoint: $(subscriptionName)
+                      azureSubscriptionEndpoint: $(azureSubscriptionEndpoint)
                       azureResourceGroup: $(resourcesGroupName)
                       kubernetesCluster: $(aksClusterName)
                       command: "get"
