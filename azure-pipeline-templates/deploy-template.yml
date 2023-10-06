@@ -37,11 +37,11 @@ stages:
       dependsOn: Build
       variables:
           imagePullSecret: ${{parameters.imagePullSecret}}
-          angular-web-env: ${{parameters.angular_web_env}}
-          replica-number: ${{parameters.replica_number}}
-          acr-server: ${{parameters.acr_server}}
-          acr-repo-name: ${{parameters.acr_repo_name}}
-          image-version: ${{parameters.image_version}}
+          angular_web_env: ${{parameters.angular_web_env}}
+          replica_number: ${{parameters.replica_number}}
+          acr_server: ${{parameters.acr_server}}
+          acr_repo_name: ${{parameters.acr_repo_name}}
+          image_version: ${{parameters.image_version}}
       jobs:
           - deployment: ${{parameters.stageName}}
             displayName: ${{parameters.stageName}}
@@ -90,4 +90,4 @@ stages:
                                   imagePullSecrets: |
                                       $(imagePullSecret)
                                   containers: |
-                                      $(acr-server)/$(acr-repo-name):$(image-version)
+                                      $(acr_server)/$(acr_repo_name):$(image_version)
