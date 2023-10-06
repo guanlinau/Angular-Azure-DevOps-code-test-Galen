@@ -4,9 +4,10 @@
 module.exports = function (config) {
 	let browsers = ['Chrome'];
 
-    // If run in CI, use ChromeHeadless
-    if (process.env.CI) {
-        browsers = ['ChromeHeadless'];
+	// If run in CI, use ChromeHeadless
+	if (process.env.CI) {
+		browsers = ['ChromeHeadless'];
+	}
 	config.set({
 		basePath: '',
 		frameworks: ['jasmine', '@angular-devkit/build-angular'],
