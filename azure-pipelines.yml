@@ -50,7 +50,7 @@ stages:
                       artifact: "manifests"
                       publishLocation: "pipeline"
 
-    - template: azure-pipeline-templates/deploy-template.yml
+    - template: azure_pipeline_templates/deploy_template.yml
       parameters:
           stageName: $(deployToUatStage)
           imagePullSecret: $(imageSecret)
