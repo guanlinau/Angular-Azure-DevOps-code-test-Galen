@@ -32,11 +32,12 @@ stages:
                   displayName: "List contents before tests"
 
                 - script: |
-                      npx ng test --code-coverage --watch=false
+                      npx ng test --code-coverage --watch=false --single-run
                   displayName: "Run unit tesing and access the code coverage"
 
-                - script: pwd && ls -al
-                  displayName: "List contents of test-results directory"
+                - script: ls -al coverage/
+                  displayName: "List contents of coverage directory"
+
 
                 - task: PublishCodeCoverageResults@1
                   displayName: "Publish code coverage Angular results"
