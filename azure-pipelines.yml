@@ -30,6 +30,7 @@ variables:
 stages:
     - stage: Build
       displayName: Build and push stage
+      #   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
       jobs:
           - job: Build
             displayName: Build
@@ -56,7 +57,7 @@ stages:
 
     - stage: Deploy_to_UAT
       displayName: Deploy to UAT stage
-
+      #   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
       dependsOn: Build
       variables:
           imagePullSecret: $(imageSecret)
@@ -90,20 +91,20 @@ stages:
 
                             - task: replacetokens@5
                               inputs:
-                                rootDirectory: '$(System.ArtifactsDirectory)/manifests'
-                                targetFiles: 'kubernetes.yaml'
-                                encoding: 'auto'
-                                tokenPattern: 'custom'
-                                tokenPrefix: '$'
-                                tokenSuffix: '$'
-                                writeBOM: true
-                                actionOnMissing: 'warn'
-                                keepToken: false
-                                actionOnNoFiles: 'continue'
-                                enableTransforms: false
-                                enableRecursion: false
-                                useLegacyPattern: false
-                                enableTelemetry: true
+                                  rootDirectory: "$(System.ArtifactsDirectory)/manifests"
+                                  targetFiles: "kubernetes.yaml"
+                                  encoding: "auto"
+                                  tokenPattern: "custom"
+                                  tokenPrefix: "$"
+                                  tokenSuffix: "$"
+                                  writeBOM: true
+                                  actionOnMissing: "warn"
+                                  keepToken: false
+                                  actionOnNoFiles: "continue"
+                                  enableTransforms: false
+                                  enableRecursion: false
+                                  useLegacyPattern: false
+                                  enableTelemetry: true
 
                             - task: KubernetesManifest@0
                               displayName: Deploy to Kubernetes cluster
@@ -119,7 +120,7 @@ stages:
 
     - stage: E2E_Tests_UAT
       displayName: Run e2e tests on UAT
-      condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+      #   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
       dependsOn: Deploy_to_UAT
       jobs:
           - job: E2E_Tests
