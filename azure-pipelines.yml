@@ -42,10 +42,10 @@ stages:
                       reportDirectory: "coverage/angular11-testing-examples/"
                       failIfCoverageEmpty: false
 
-                - script: ls -al $(System.DefaultWorkingDirectory)/src
+                - script: ls -al $(System.DefaultWorkingDirectory)/src/test-results
                   displayName: 'List test results directory contents'
 
-                - script: ls -al $(System.DefaultWorkingDirectory)/src/test-results
+                - script: ls -al $(System.DefaultWorkingDirectory)/src/test-results/Chrome_Headless_117.0.5938.132_(Linux_x86_64)
                   displayName: 'List test results directory contents'
 
 
