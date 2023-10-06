@@ -5,19 +5,19 @@ parameters:
     - name: imagePullSecret
       type: string
       default: ""
-    - name: angular-web-env
+    - name: angular_web_env
       type: string
       default: ""
-    - name: replica-number
+    - name: replica_number
       type: string
       default: ""
-    - name: acr-server
+    - name: acr_server
       type: string
       default: ""
-    - name: acr-repo-name
+    - name: acr_repo_name
       type: string
       default: ""
-    - name: image-version
+    - name: image_version
       type: string
       default: ""
     - name: vmImage
@@ -37,11 +37,11 @@ stages:
       dependsOn: Build
       variables:
           imagePullSecret: ${{parameters.imagePullSecret}}
-          angular-web-env: ${{parameters.angular-web-env}}
-          replica-number: ${{parameters.replica-number}}
-          acr-server: ${{parameters.acr-server}}
-          acr-repo-name: ${{parameters.acr-repo-name}}
-          image-version: ${{parameters.image-version}}
+          angular-web-env: ${{parameters.angular_web_env}}
+          replica-number: ${{parameters.replica_number}}
+          acr-server: ${{parameters.acr_server}}
+          acr-repo-name: ${{parameters.acr_repo_name}}
+          image-version: ${{parameters.image_version}}
       jobs:
           - deployment: ${{parameters.stageName}}
             displayName: ${{parameters.stageName}}
@@ -61,7 +61,7 @@ stages:
                               inputs:
                                   action: createSecret
                                   secretName: $(imagePullSecret)
-                                  namespace: ${{parameters.angular-web-env}}
+                                  namespace: ${{parameters.angular_web_env}}
                                   dockerRegistryEndpoint: ${{parameters.dockerRegistryEndpoint}}
                             - task: replacetokens@5
                               displayName: Replace Variables
@@ -84,7 +84,7 @@ stages:
                               displayName: Deploy to Kubernetes cluster
                               inputs:
                                   action: deploy
-                                  namespace: ${{parameters.angular-web-env}}
+                                  namespace: ${{parameters.angular_web_env}}
                                   manifests: |
                                       $(System.ArtifactsDirectory)/manifests/kubernetes.yaml
                                   imagePullSecrets: |
