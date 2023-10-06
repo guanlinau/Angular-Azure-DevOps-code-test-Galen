@@ -30,7 +30,7 @@ variables:
 stages:
     - stage: Build
       displayName: Build and push stage
-      condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+    #   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
       jobs:
           - job: Build
             displayName: Build
@@ -57,7 +57,7 @@ stages:
 
     - stage: Deploy_to_UAT
       displayName: Deploy to UAT stage
-      condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+    #   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
       dependsOn: Build
       variables:
           imagePullSecret: $(imageSecret)
@@ -121,7 +121,7 @@ stages:
     - stage: E2E_Tests_UAT
       displayName: Run e2e tests on UAT
     #   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
-    #   dependsOn: Deploy_to_UAT
+      dependsOn: Deploy_to_UAT
       jobs:
           - job: E2E_Tests
             displayName: E2E Tests on UAT environment
