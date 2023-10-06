@@ -2,9 +2,7 @@
 # - master
 # trigger: none
 trigger:
-    branches:
-        include:
-            - Augular-DevOps-YAML-pipleine-Galen
+    - Augular-DevOps-YAML-pipleine-Galen
 
 resources:
     - repo: self
@@ -13,21 +11,22 @@ variables:
     dockerRegistryServiceConnection: "5e1f01e6-4395-4c31-8174-dd4474fc2ca1"
     imageRepository: "angularrepo"
     containerRegistry: "angularwebacr.azurecr.io"
+    dockerfilePath: "$(Build.SourcesDirectory)/Dockerfile"
+    tag: "$(Build.BuildId)"
     imageSecret: "image-key"
     uatNamespace: "angular-web-uat"
     proNamespace: "angular-web-pro"
     uatReplicasNumber: 1
     proReplicasNumber: 2
-    dockerfilePath: "$(Build.SourcesDirectory)/Dockerfile"
     uatEnvironment: "uat.angular-web-uat"
     proEnvironment: "pro.angular-web-pro"
+    deployToUatStage: "DeployOnUat"
+    deployToProStage: "DeployOnProd"
+    vmImageName: "ubuntu-latest"
     azureSubscriptionEndpoint: "e2e_azureSubscriptionEndpoint"
     resourcesGroupName: "angular-web-sg"
     aksClusterName: "angular-web-aks"
     clusterServiceName: "angular-web-service"
-
-    tag: "$(Build.BuildId)"
-    vmImageName: "ubuntu-latest"
 
 stages:
     - stage: Build
@@ -47,6 +46,7 @@ stages:
                       containerRegistry: $(dockerRegistryServiceConnection)
                       tags: |
                           - $(tag)
+
                 - task: PublishPipelineArtifact@1
                   displayName: Publish the manifests folder to pipeline
                   inputs:
