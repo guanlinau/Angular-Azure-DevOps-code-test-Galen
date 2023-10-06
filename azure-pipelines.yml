@@ -27,12 +27,15 @@ stages:
                       command: "custom"
                       customCommand: "run build"
                   displayName: "Run build for compiling"
+                
+                - script: pwd && ls -al
+                  displayName: "List contents before tests"
 
                 - script: |
                       npx ng test --code-coverage --watch=false
                   displayName: "Run unit tesing and access the code coverage"
 
-                - script: ls -al test-results
+                - script: pwd && ls -al
                   displayName: "List contents of test-results directory"
 
                 - task: PublishCodeCoverageResults@1
