@@ -2,12 +2,14 @@
 # - master
 # trigger: none
 trigger:
-    - Augular-DevOps-YAML-pipleine-Galen
+    branches:
+        include:
+            - Augular-DevOps-YAML-pipleine-Galen
+
 resources:
     - repo: self
 
 variables:
-    # Container registry service connection established during pipeline creation
     dockerRegistryServiceConnection: "5e1f01e6-4395-4c31-8174-dd4474fc2ca1"
     imageRepository: "angularrepo"
     containerRegistry: "angularwebacr.azurecr.io"
@@ -19,15 +21,17 @@ variables:
     dockerfilePath: "$(Build.SourcesDirectory)/Dockerfile"
     uatEnvironment: "uat.angular-web-uat"
     proEnvironment: "pro.angular-web-pro"
-    tag: "$(Build.BuildId)"
+    subscriptionName: "Pay-As-You-Go"
+    resourcesGroupName: "angular-web-sg"
+    aksClusterName: "angular-web-aks"
+    clusterServiceName: "angular-web-service"
 
-    # Agent VM image name
+    tag: "$(Build.BuildId)"
     vmImageName: "ubuntu-latest"
 
 stages:
     - stage: Build
       displayName: Build and push stage
-      #   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
       jobs:
           - job: Build
             displayName: Build
@@ -41,9 +45,8 @@ stages:
                       repository: $(imageRepository)
                       dockerfile: $(dockerfilePath)
                       containerRegistry: $(dockerRegistryServiceConnection)
-                      tags: |
-                          $(tag)
-
+                      tags:
+                          - $(tag)
                 - task: PublishPipelineArtifact@1
                   displayName: Publish the manifests folder to pipeline
                   inputs:
@@ -53,7 +56,6 @@ stages:
 
     - stage: Deploy_to_UAT
       displayName: Deploy to UAT stage
-      #   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
       dependsOn: Build
       variables:
           imagePullSecret: $(imageSecret)
@@ -76,7 +78,6 @@ stages:
                               inputs:
                                   artifactName: "manifests"
                                   downloadPath: "$(System.ArtifactsDirectory)/manifests"
-
                             - task: KubernetesManifest@0
                               displayName: Create imagePullSecret
                               inputs:
@@ -84,33 +85,57 @@ stages:
                                   secretName: $(imagePullSecret)
                                   namespace: $(uatNamespace)
                                   dockerRegistryEndpoint: $(dockerRegistryServiceConnection)
-
                             - task: replacetokens@5
                               displayName: Replace Variables
                               inputs:
                                   rootDirectory: "$(System.ArtifactsDirectory)/manifests"
                                   targetFiles: "kubernetes.yaml"
-                                  encoding: "auto"
-                                  tokenPattern: "custom"
                                   tokenPrefix: "$"
                                   tokenSuffix: "$"
-                                  writeBOM: true
-                                  actionOnMissing: "warn"
-                                  keepToken: false
-                                  actionOnNoFiles: "continue"
-                                  enableTransforms: false
-                                  enableRecursion: false
-                                  useLegacyPattern: false
-                                  enableTelemetry: true
-
                             - task: KubernetesManifest@0
                               displayName: Deploy to Kubernetes cluster
                               inputs:
                                   action: deploy
                                   namespace: $(uatNamespace)
-                                  manifests: |
-                                      $(System.ArtifactsDirectory)/manifests/kubernetes.yaml
-                                  imagePullSecrets: |
-                                      $(imagePullSecret)
-                                  containers: |
-                                      $(containerRegistry)/$(imageRepository):$(tag)
+                                  manifests:
+                                      - $(System.ArtifactsDirectory)/manifests/kubernetes.yaml
+                                  imagePullSecrets:
+                                      - $(imagePullSecret)
+                                  containers:
+                                      - $(containerRegistry)/$(imageRepository):$(tag)
+
+    - stage: E2E_Tests_UAT
+      displayName: Run e2e tests on UAT
+      condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+      dependsOn: Deploy_to_UAT
+      jobs:
+          - job: E2E_Tests
+            displayName: E2E Tests on UAT environment
+            pool:
+                vmImage: $(vmImageName)
+            steps:
+                - checkout: self
+                - task: Kubernetes@1
+                  displayName: Get Service IP
+                  inputs:
+                      connectionType: "Azure Resource Manager"
+                      azureSubscriptionEndpoint: $(subscriptionName)
+                      azureResourceGroup: $(resourcesGroupName)
+                      kubernetesCluster: $(aksClusterName)
+                      command: "get"
+                      arguments: 'svc $(clusterServiceName) --namespace=$(uatNamespace) -o=jsonpath="{.status.loadBalancer.ingress[0].ip}"'
+                  env:
+                      SERVICE_IP: $(ServiceIp)
+                - script: |
+                      echo "Setting API_URL for e2e tests..."
+                      sed -i "s,http://localhost:4200/,http://$SERVICE_IP/,g" e2e/protractor.conf.js
+                  displayName: Set API URL for e2e tests
+                - task: Npm@1
+                  displayName: Install dependencies
+                  inputs:
+                      command: "install"
+                - task: Npm@1
+                  displayName: Run e2e tests
+                  inputs:
+                      command: "custom"
+                      customCommand: "run e2e"
