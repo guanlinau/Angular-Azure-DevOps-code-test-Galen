@@ -20,8 +20,8 @@ variables:
     proReplicasNumber: 2
     uatEnvironment: "uat.angular-web-uat"
     proEnvironment: "pro.angular-web-pro"
-    deployToUatStage: "Deploy_to_UAT"
-    deployToProStage: "Deploy_to_Pro"
+    deploy_to_uat_stage: "Deploy_To_UAT"
+    deploy_to_pro_stage: "Deploy_To_Pro"
     vmImageName: "ubuntu-latest"
 
 stages:
@@ -52,7 +52,7 @@ stages:
 
     - template: templates/deploytemplate.yml
       parameters:
-          stageName: $(deployToUatStage)
+          stageName: $(deploy_to_uat_stage)
           imagePullSecret: $(imageSecret)
           angular_web_env: $(uatNamespace)
           replica_number: $(uatReplicasNumber)
@@ -62,63 +62,3 @@ stages:
           vmImage: $(vmImageName)
           environment: $(uatEnvironment)
           dockerRegistryEndpoint: $(dockerRegistryServiceConnection)
-
-      # - stage: Deploy_to_UAT
-      #   displayName: Deploy to UAT stage
-      #   dependsOn: Build
-      #   variables:
-      #       imagePullSecret: $(imageSecret)
-      #       angular-web-env: $(uatNamespace)
-      #       replica-number: $(uatReplicasNumber)
-      #       acr-server: $(containerRegistry)
-      #       acr-repo-name: $(imageRepository)
-      #       image-version: $(tag)
-      #   jobs:
-      #       - deployment: Deploy_to_UAT
-      #         displayName: Deploy to UAT environment
-      #         pool:
-      #             vmImage: $(vmImageName)
-      #         environment: $(uatEnvironment)
-      #         strategy:
-      #             runOnce:
-      #                 deploy:
-      #                     steps:
-      #                         - task: DownloadPipelineArtifact@2
-      #                           inputs:
-      #                               artifactName: "manifests"
-      #                               downloadPath: "$(System.ArtifactsDirectory)/manifests"
-      #                         - task: KubernetesManifest@0
-      #                           displayName: Create imagePullSecret
-      #                           inputs:
-      #                               action: createSecret
-      #                               secretName: $(imagePullSecret)
-      #                               namespace: $(uatNamespace)
-      #                               dockerRegistryEndpoint: $(dockerRegistryServiceConnection)
-      #                         - task: replacetokens@5
-      #                           displayName: Replace Variables
-      #                           inputs:
-      #                               rootDirectory: "$(System.ArtifactsDirectory)/manifests"
-      #                               targetFiles: "kubernetes.yaml"
-      #                               encoding: "auto"
-      #                               tokenPattern: "custom"
-      #                               tokenPrefix: "$"
-      #                               tokenSuffix: "$"
-      #                               writeBOM: true
-      #                               actionOnMissing: "warn"
-      #                               keepToken: false
-      #                               actionOnNoFiles: "continue"
-      #                               enableTransforms: false
-      #                               enableRecursion: false
-      #                               useLegacyPattern: false
-      #                               enableTelemetry: true
-      #                         - task: KubernetesManifest@0
-      #                           displayName: Deploy to Kubernetes cluster
-      #                           inputs:
-      #                               action: deploy
-      #                               namespace: $(uatNamespace)
-      #                               manifests:
-      #                                   - $(System.ArtifactsDirectory)/manifests/kubernetes.yaml
-      #                               imagePullSecrets:
-      #                                   - $(imagePullSecret)
-      #                               containers:
-      #                                   - $(containerRegistry)/$(imageRepository):$(tag)
