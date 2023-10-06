@@ -10,7 +10,7 @@ stages:
     displayName: "Preparetion"
     jobs:
       - job: "Preparetion_and_test"
-        displayName: "Preparetion"
+        displayName: "Preparetion and test"
         steps:
 
         - task: NodeTool@0
@@ -31,23 +31,40 @@ stages:
         # - task: Npm@1
         #   inputs:
         #     command: 'custom'
-        #     customCommand: 'run test -- --no-watch --single-run --verbose'
+        #     customCommand: 'run test -- --watch=false --code-coverage'
         #   displayName: 'Run unit testing'
+        
         - script: |
             npm install -g @angular/cli
-            ng test --watch=false     
-          displayName: 'Run unit testing'
+            ng test --browsers=ChromeHeadless --code-coverage --watch=false     
+          displayName: 'run unit tesing and access the code coverage'
+        
+        - task: PublishCodeCoverageResults@1
+          displayName: 'Publish code coverage Angular results'
+          condition: succeededOrFailed()
+          inputs:
+             codeCoverageTool: 'Cobertura' 
+             summaryFileLocation: 'coverage/angular11-testing-examples/cobertura-coverage.xml'
+             reportDirectory: 'coverage/angular11-testing-examples/'
+             failIfCoverageEmpty: false
+
+        - task: PublishTestResults@2
+          displayName: 'Publish Angular test results'
+          condition: succeededOrFailed()
+          inputs:
+             searchFolder: $(System.DefaultWorkingDirectory)
+             testRunTitle: Angular
+             testResultsFormat: JUnit
+             testResultsFiles: "**/TESTS-*.xml"
 
         - task: Npm@1
           inputs:
             command: 'custom'
             customCommand: 'run lint'
           displayName: 'Run Linting and code quality analysis'
+          condition: succeededOrFailed()
         
-        - script: |
-            npm install -g @angular/cli
-            ng test --code-coverage --no-watch --browsers=ChromeHeadless       
-          displayName: 'npm install angular/cli and assessing code coverage'
+        
         
   - stage: "Build_and_push"
     displayName: "Build and push docker image"
