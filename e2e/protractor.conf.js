@@ -12,9 +12,6 @@ exports.config = {
 			args: ["--headless", "--disable-gpu", "--window-size=1280x1024"],
 			//binary: process.env.CHROME_BIN
 		},
-		chromeDriver:
-			"../node_modules/protractor/node_modules/webdriver-manager/selenium/chromedriver_117.0.5938",
-		directConnect: true,
 	},
 	directConnect: true,
 	baseUrl: "http://localhost:4200/",
