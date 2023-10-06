@@ -158,6 +158,7 @@ stages:
 
                 - script: |
                       node node_modules/.bin/webdriver-manager update --versions.chrome=117.0.5938.132
+                      google-chrome --version
                   displayName: "update chrome version"
 
                 - task: Npm@1
