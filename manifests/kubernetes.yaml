@@ -2,11 +2,11 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
     name: angular-web-deployment
-    namespace: $angular_web_env$
+    namespace: $angular-web-env$
     labels:
         app: angular-web
 spec:
-    replicas: $replica_number$
+    replicas: $replica-number$
     selector:
         matchLabels:
             app: angular-web
@@ -15,26 +15,24 @@ spec:
             labels:
                 app: angular-web
         spec:
-            imagePullSecrets:
-                - name: image_key
             containers:
                 - name: angular-web
-                  image: $acr_server$/$acr_repo_name$:$image_version$
+                  image: $acr-server$/$acr-repo-name$:$image-version$
                   imagePullPolicy: Always
                   ports:
-                      - containerPort: 80
+                      - containerPort: 8080
                   livenessProbe:
                       initialDelaySeconds: 5
                       periodSeconds: 5
                       httpGet:
                           path: /
-                          port: 80
+                          port: 8080
                   readinessProbe:
                       initialDelaySeconds: 5
                       periodSeconds: 5
                       httpGet:
                           path: /
-                          port: 80
+                          port: 8080
                   resources:
                       requests:
                           cpu: 100m
@@ -48,7 +46,7 @@ apiVersion: v1
 kind: Service
 metadata:
     name: angular-web-service
-    namespace: $angular_web_env$
+    namespace: $angular-web-env$
     labels:
         app: angular-web
 spec:
@@ -59,4 +57,4 @@ spec:
         - name: angular-web-service
           protocol: TCP
           port: 80
-          targetPort: 80
+          targetPort: 8080
