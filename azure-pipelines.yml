@@ -4,11 +4,15 @@ trigger: none
 # trigger:
 #     - Augular-DevOps-YAML-pipleine-Galen
 
+pool:
+    vmImage: ubuntu-latest
+
 resources:
     - repo: self
 
 variables:
     # Container registry service connection established during pipeline creation
+    CI: true
     dockerRegistryServiceConnection: "5e1f01e6-4395-4c31-8174-dd4474fc2ca1"
     imageRepository: "angularrepo"
     containerRegistry: "angularwebacr.azurecr.io"
@@ -27,9 +31,69 @@ variables:
     aksClusterName: "angular-web-aks"
     clusterServiceName: "angular-web-service"
 
+
+
 stages:
+    - stage: "Test_Code_Analysis"
+      displayName: "Test&Code Analysis"
+      jobs:
+          - job: "Compile_Test_Code_Analysis"
+            displayName: "Preparetion and test"
+            
+            # Our angular project uses Node.js v14.21.3
+            steps:
+                - task: NodeTool@0
+                  inputs:
+                      versionSource: "spec"
+                      versionSpec: "14.x"
+                  displayName: "Install Node.js"
+                - task: Npm@1
+                  inputs:
+                      command: "install"
+                  displayName: "Install dependencies"
+                
+                #  Build and compile the Angular project
+                - task: Npm@1
+                  inputs:
+                      command: "custom"
+                      customCommand: "run build"
+                  displayName: "Run build for compiling"
+                
+                # Run unit tests and test coverage
+                - script: |
+                      npx ng test --code-coverage --watch=false
+                  displayName: "Run unit tesing and access the code coverage"
+
+                # Accessing the code coverage
+                - task: PublishCodeCoverageResults@1
+                  displayName: "Access and Publish code coverage results"
+                  condition: succeededOrFailed()
+                  inputs:
+                      codeCoverageTool: "Cobertura"
+                      summaryFileLocation: "coverage/angular11-testing-examples/cobertura-coverage.xml"
+                      reportDirectory: "coverage/angular11-testing-examples/"
+                      failIfCoverageEmpty: false
+                    
+                # Accessing the unit testing results report
+                - task: PublishTestResults@2
+                  displayName: "Access and Publish unit test results"
+                  condition: succeededOrFailed()
+                  inputs:
+                      searchFolder: $(System.DefaultWorkingDirectory)
+                      testRunTitle: Angular
+                      testResultsFormat: JUnit
+                      testResultsFiles: "src/test-results/Chrome_Headless_117.0.5938.132_(Linux_x86_64)/TESTS-results.xml"
+
+                # Linting and code analysis
+                - task: Npm@1
+                  inputs:
+                      command: "custom"
+                      customCommand: "run lint"
+                  displayName: "Run Linting and code quality analysis"
+
+    # This stage is to Build Docker image, versioning artifacts and push images/artifacts into Azure Container Registry
     - stage: Build
-      displayName: Build and push stage
+      displayName: Build and push Docker image stage
       #   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
       jobs:
           - job: Build
@@ -54,7 +118,8 @@ stages:
                       targetPath: "$(Build.SourcesDirectory)/manifests"
                       artifact: "manifests"
                       publishLocation: "pipeline"
-
+    
+    #  This stage is to deploy angular web into Uat env for User Acceptance Testing also as a deployed env for e2e 
     - stage: Deploy_to_UAT
       displayName: Deploy to UAT stage
       #   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
@@ -117,7 +182,8 @@ stages:
                                       $(imagePullSecret)
                                   containers: |
                                       $(containerRegistry)/$(imageRepository):$(tag)
-
+    
+    # This stage is to conduct E2E test in a deployed environment-Uat env
     - stage: E2E_Tests_UAT
       displayName: Run e2e tests on UAT
       #   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
@@ -147,6 +213,7 @@ stages:
                 - script: |
                       echo "Setting API_URL for e2e tests..."
                       sed -i "s,http://localhost:4200/,http://$SERVICE_IP/,g" e2e/protractor.conf.js
+                      cat e2e/protractor.conf.js
                   displayName: Set API URL for e2e tests
 
                 - task: NodeTool@0
