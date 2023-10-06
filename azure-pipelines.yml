@@ -32,12 +32,9 @@ stages:
                       npx ng test --code-coverage --watch=false
                   displayName: "Run unit tesing and access the code coverage"
 
-                - script: ls -al coverage/
-                  displayName: "List contents of coverage directory"
-
 
                 - task: PublishCodeCoverageResults@1
-                  displayName: "Publish code coverage Angular results"
+                  displayName: "Access and Publish code coverage results"
                   condition: succeededOrFailed()
                   inputs:
                       codeCoverageTool: "Cobertura"
@@ -46,13 +43,13 @@ stages:
                       failIfCoverageEmpty: false
 
                 - task: PublishTestResults@2
-                  displayName: "Publish Angular test results"
+                  displayName: "Access and Publish unit test results"
                   condition: succeededOrFailed()
                   inputs:
                       searchFolder: $(System.DefaultWorkingDirectory)
                       testRunTitle: Angular
                       testResultsFormat: JUnit
-                      testResultsFiles: "**/test-results/TESTS-*.xml"
+                      testResultsFiles: "src/test-results/TESTS-*.xml"
 
                 - task: Npm@1
                   inputs:
