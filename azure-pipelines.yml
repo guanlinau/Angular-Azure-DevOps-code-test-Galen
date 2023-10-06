@@ -1,8 +1,8 @@
 # trigger:
 # - master
-# trigger: none
-trigger:
-    - Augular-DevOps-YAML-pipleine-Galen
+trigger: none
+# trigger:
+#     - Augular-DevOps-YAML-pipleine-Galen
 
 resources:
     - repo: self
@@ -129,6 +129,8 @@ stages:
                 vmImage: $(vmImageName)
             steps:
                 - checkout: self
+
+                # This step is qu get the loadbalancer IP in uat environemnt for e2e test
                 - task: Kubernetes@1
                   displayName: Get Service IP
                   inputs:
@@ -140,6 +142,8 @@ stages:
                       arguments: 'svc $(clusterServiceName) --namespace=$(uatNamespace) -o=jsonpath="{.status.loadBalancer.ingress[0].ip}"'
                   env:
                       SERVICE_IP: $(ServiceIp)
+
+                # This step below is to replace the test ip with loadbalancer ip in protractor.conf.js file
                 - script: |
                       echo "Setting API_URL for e2e tests..."
                       sed -i "s,http://localhost:4200/,http://$SERVICE_IP/,g" e2e/protractor.conf.js
@@ -156,17 +160,10 @@ stages:
                   inputs:
                       command: "install"
 
+                #  This step is to update the project chrome driver to 117.0.5938.132, 
+                #  So it can align with the chrome driver version in ubuntu server of the azure pipeline
                 - script: |
-                      sudo apt-get update
-                      sudo apt-get install -y wget
-                      wget https://path-to-the-deb-file/google-chrome-stable_114.0.5735.90_amd64.deb
-                      sudo apt-get install ./google-chrome-stable_114.0.5735.90_amd64.deb
-                      google-chrome --version
-                  displayName: 'Install Google Chrome 114.0.5735.90'
-
-
-                - script: |
-                      node node_modules/.bin/webdriver-manager update --gecko false
+                      node node_modules/.bin/webdriver-manager update --versions.chrome=117.0.5938
                       node node_modules/.bin/webdriver-manager status
                   displayName: "update project chrome version"
 
