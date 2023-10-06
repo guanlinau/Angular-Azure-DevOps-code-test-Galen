@@ -157,7 +157,8 @@ stages:
                       command: "install"
 
                 - script: |
-                      node node_modules/.bin/webdriver-manager update --versions.chrome=117.0.5938.132
+                    #   node node_modules/.bin/webdriver-manager update --versions.chrome=117.0.5938
+                      node node_modules/.bin/webdriver-manager update --gecko false
                       node node_modules/.bin/webdriver-manager status
                   displayName: "update project chrome version"
 
