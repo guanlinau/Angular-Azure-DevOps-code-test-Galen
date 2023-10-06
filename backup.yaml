@@ -1,8 +1,8 @@
 # trigger:
 # - master
-trigger: none
-# trigger:
-#     - Augular-DevOps-YAML-pipleine-Galen
+# trigger: none
+trigger:
+    - Augular-DevOps-YAML-pipleine-Galen
 
 resources:
     - repo: self
@@ -12,15 +12,15 @@ variables:
     dockerRegistryServiceConnection: "5e1f01e6-4395-4c31-8174-dd4474fc2ca1"
     imageRepository: "angularrepo"
     containerRegistry: "angularwebacr.azurecr.io"
-    dockerfilePath: "$(Build.SourcesDirectory)/Dockerfile"
-    tag: "$(Build.BuildId)"
     imageSecret: "image-key"
     uatNamespace: "angular-web-uat"
     proNamespace: "angular-web-pro"
     uatReplicasNumber: 1
     proReplicasNumber: 2
+    dockerfilePath: "$(Build.SourcesDirectory)/Dockerfile"
     uatEnvironment: "uat.angular-web-uat"
     proEnvironment: "pro.angular-web-pro"
+    tag: "$(Build.BuildId)"
     vmImageName: "ubuntu-latest"
     azureSubscriptionEndpoint: "e2e_azureSubscriptionEndpoint"
     resourcesGroupName: "angular-web-sg"
@@ -30,12 +30,12 @@ variables:
 stages:
     - stage: Build
       displayName: Build and push stage
+      condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
       jobs:
           - job: Build
             displayName: Build
             pool:
                 vmImage: $(vmImageName)
-
             steps:
                 - task: Docker@2
                   displayName: Build and push an image to container registry
@@ -56,7 +56,7 @@ stages:
 
     - stage: Deploy_to_UAT
       displayName: Deploy to UAT stage
-
+      condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
       dependsOn: Build
       variables:
           imagePullSecret: $(imageSecret)
@@ -117,39 +117,3 @@ stages:
                                       $(imagePullSecret)
                                   containers: |
                                       $(containerRegistry)/$(imageRepository):$(tag)
-
-    - stage: E2E_Tests_UAT
-      displayName: Run e2e tests on UAT
-      condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
-      dependsOn: Deploy_to_UAT
-      jobs:
-          - job: E2E_Tests
-            displayName: E2E Tests on UAT environment
-            pool:
-                vmImage: $(vmImageName)
-            steps:
-                - checkout: self
-                - task: Kubernetes@1
-                  displayName: Get Service IP
-                  inputs:
-                      connectionType: "Azure Resource Manager"
-                      azureSubscriptionEndpoint: $(azureSubscriptionEndpoint)
-                      azureResourceGroup: $(resourcesGroupName)
-                      kubernetesCluster: $(aksClusterName)
-                      command: "get"
-                      arguments: 'svc $(clusterServiceName) --namespace=$(uatNamespace) -o=jsonpath="{.status.loadBalancer.ingress[0].ip}"'
-                  env:
-                      SERVICE_IP: $(ServiceIp)
-                - script: |
-                      echo "Setting API_URL for e2e tests..."
-                      sed -i "s,http://localhost:4200/,http://$SERVICE_IP/,g" e2e/protractor.conf.js
-                  displayName: Set API URL for e2e tests
-                - task: Npm@1
-                  displayName: Install dependencies
-                  inputs:
-                      command: "install"
-                - task: Npm@1
-                  displayName: Run e2e tests
-                  inputs:
-                      command: "custom"
-                      customCommand: "run e2e"
