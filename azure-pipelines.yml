@@ -3,30 +3,31 @@
 # trigger: none
 trigger:
     - Augular-DevOps-YAML-pipleine-Galen
-
 resources:
     - repo: self
 
 variables:
+    # Container registry service connection established during pipeline creation
     dockerRegistryServiceConnection: "5e1f01e6-4395-4c31-8174-dd4474fc2ca1"
     imageRepository: "angularrepo"
     containerRegistry: "angularwebacr.azurecr.io"
-    dockerfilePath: "$(Build.SourcesDirectory)/Dockerfile"
-    tag: "$(Build.BuildId)"
     imageSecret: "image-key"
     uatNamespace: "angular-web-uat"
     proNamespace: "angular-web-pro"
     uatReplicasNumber: 1
     proReplicasNumber: 2
+    dockerfilePath: "$(Build.SourcesDirectory)/Dockerfile"
     uatEnvironment: "uat.angular-web-uat"
     proEnvironment: "pro.angular-web-pro"
-    deploy_to_uat_stage: "Deploy_To_UAT"
-    deploy_to_pro_stage: "Deploy_To_Pro"
+    tag: "$(Build.BuildId)"
+
+    # Agent VM image name
     vmImageName: "ubuntu-latest"
 
 stages:
     - stage: Build
       displayName: Build and push stage
+      #   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
       jobs:
           - job: Build
             displayName: Build
@@ -41,7 +42,7 @@ stages:
                       dockerfile: $(dockerfilePath)
                       containerRegistry: $(dockerRegistryServiceConnection)
                       tags: |
-                          - $(tag)
+                          $(tag)
 
                 - task: PublishPipelineArtifact@1
                   displayName: Publish the manifests folder to pipeline
@@ -50,15 +51,66 @@ stages:
                       artifact: "manifests"
                       publishLocation: "pipeline"
 
-    - template: templates/deploytemplate.yml
-      parameters:
-          stageName: $(deploy_to_uat_stage)
+    - stage: Deploy_to_UAT
+      displayName: Deploy to UAT stage
+      #   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+      dependsOn: Build
+      variables:
           imagePullSecret: $(imageSecret)
-          angular_web_env: $(uatNamespace)
-          replica_number: $(uatReplicasNumber)
-          acr_server: $(containerRegistry)
-          acr_repo_name: $(imageRepository)
-          image_version: $(tag)
-          vmImage: $(vmImageName)
-          environment: $(uatEnvironment)
-          dockerRegistryEndpoint: $(dockerRegistryServiceConnection)
+          angular-web-env: $(uatNamespace)
+          replica-number: $(uatReplicasNumber)
+          acr-server: $(containerRegistry)
+          acr-repo-name: $(imageRepository)
+          image-version: $(tag)
+      jobs:
+          - deployment: Deploy_to_UAT
+            displayName: Deploy to UAT envrionment
+            pool:
+                vmImage: $(vmImageName)
+            environment: $(uatEnvironment)
+            strategy:
+                runOnce:
+                    deploy:
+                        steps:
+                            - task: DownloadPipelineArtifact@2
+                              inputs:
+                                  artifactName: "manifests"
+                                  downloadPath: "$(System.ArtifactsDirectory)/manifests"
+
+                            - task: KubernetesManifest@0
+                              displayName: Create imagePullSecret
+                              inputs:
+                                  action: createSecret
+                                  secretName: $(imagePullSecret)
+                                  namespace: $(uatNamespace)
+                                  dockerRegistryEndpoint: $(dockerRegistryServiceConnection)
+
+                            - task: replacetokens@5
+                              displayName: Replace Variables
+                              inputs:
+                                  rootDirectory: "$(System.ArtifactsDirectory)/manifests"
+                                  targetFiles: "kubernetes.yaml"
+                                  encoding: "auto"
+                                  tokenPattern: "custom"
+                                  tokenPrefix: "$"
+                                  tokenSuffix: "$"
+                                  writeBOM: true
+                                  actionOnMissing: "warn"
+                                  keepToken: false
+                                  actionOnNoFiles: "continue"
+                                  enableTransforms: false
+                                  enableRecursion: false
+                                  useLegacyPattern: false
+                                  enableTelemetry: true
+
+                            - task: KubernetesManifest@0
+                              displayName: Deploy to Kubernetes cluster
+                              inputs:
+                                  action: deploy
+                                  namespace: $(uatNamespace)
+                                  manifests: |
+                                      $(System.ArtifactsDirectory)/manifests/kubernetes.yaml
+                                  imagePullSecrets: |
+                                      $(imagePullSecret)
+                                  containers: |
+                                      $(containerRegistry)/$(imageRepository):$(tag)
