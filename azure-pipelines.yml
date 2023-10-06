@@ -158,8 +158,8 @@ stages:
 
                 - script: |
                       node node_modules/.bin/webdriver-manager update --versions.chrome=117.0.5938.132
-                      google-chrome --version
-                  displayName: "update chrome version"
+                      node node_modules/.bin/webdriver-manager status
+                  displayName: "update project chrome version"
 
                 - task: Npm@1
                   displayName: Run e2e tests
