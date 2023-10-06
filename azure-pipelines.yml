@@ -45,7 +45,7 @@ stages:
                       repository: $(imageRepository)
                       dockerfile: $(dockerfilePath)
                       containerRegistry: $(dockerRegistryServiceConnection)
-                      tags:
+                      tags: |
                           - $(tag)
                 - task: PublishPipelineArtifact@1
                   displayName: Publish the manifests folder to pipeline
@@ -97,11 +97,11 @@ stages:
                               inputs:
                                   action: deploy
                                   namespace: $(uatNamespace)
-                                  manifests:
+                                  manifests: |
                                       - $(System.ArtifactsDirectory)/manifests/kubernetes.yaml
-                                  imagePullSecrets:
+                                  imagePullSecrets: |
                                       - $(imagePullSecret)
-                                  containers:
+                                  containers: |
                                       - $(containerRegistry)/$(imageRepository):$(tag)
 
     - stage: E2E_Tests_UAT
