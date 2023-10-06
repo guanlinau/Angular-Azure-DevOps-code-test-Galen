@@ -157,7 +157,16 @@ stages:
                       command: "install"
 
                 - script: |
-                      node node_modules/.bin/webdriver-manager update --gecko false --versions.chrome=117.0.5938
+                      sudo apt-get update
+                      sudo apt-get install -y wget
+                      wget https://path-to-the-deb-file/google-chrome-stable_114.0.5735.90_amd64.deb
+                      sudo apt-get install ./google-chrome-stable_114.0.5735.90_amd64.deb
+                      google-chrome --version
+                  displayName: 'Install Google Chrome 114.0.5735.90'
+
+
+                - script: |
+                      node node_modules/.bin/webdriver-manager update --gecko false
                       node node_modules/.bin/webdriver-manager status
                   displayName: "update project chrome version"
 
