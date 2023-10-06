@@ -13,7 +13,6 @@ exports.config = {
 			//binary: process.env.CHROME_BIN
 		},
 	},
-	directConnect: true,
 	baseUrl: "http://localhost:4200/",
 	framework: "jasmine",
 	jasmineNodeOpts: {
