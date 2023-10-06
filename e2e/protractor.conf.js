@@ -13,7 +13,7 @@ exports.config = {
 			//binary: process.env.CHROME_BIN
 		},
 		chromeDriver:
-			"../node_modules/protractor/node_modules/webdriver-manager/selenium/chromedriver_117.0.5938.132",
+			"../node_modules/protractor/node_modules/webdriver-manager/selenium/chromedriver_117.0.5938",
 		directConnect: true,
 	},
 	directConnect: true,
