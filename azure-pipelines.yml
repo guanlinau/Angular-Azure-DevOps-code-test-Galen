@@ -30,13 +30,9 @@ stages:
 
         - script: |
             npm install -g @angular/cli
-            ng test --browsers=ChromeHeadless --watch=false     
+            ng test --browsers=ChromeHeadless --code-coverage --watch=false 
           displayName: 'run unit tesing and access the code coverage'
         
-        - script: |
-            npm install -g @angular/cli
-            ng test --code-coverage     
-          displayName: 'run unit tesing and access the code coverage'
         
         - task: PublishCodeCoverageResults@1
           displayName: 'Publish code coverage Angular results'
@@ -61,7 +57,6 @@ stages:
             command: 'custom'
             customCommand: 'run lint'
           displayName: 'Run Linting and code quality analysis'
-          condition: succeededOrFailed()
         
         
         
