@@ -155,6 +155,11 @@ stages:
                   displayName: Install dependencies
                   inputs:
                       command: "install"
+                
+                - script: |
+                    node node_modules/.bin/webdriver-manager update --versions.chrome=114.0.5735.90
+                    displayName: 'update chrome version'
+
                 - task: Npm@1
                   displayName: Run e2e tests
                   inputs:
