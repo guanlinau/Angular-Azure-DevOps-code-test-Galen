@@ -33,6 +33,7 @@ parameters:
 stages:
     - stage: ${{parameters.stageName}}
       displayName: ${{parameters.stageName}}
+      #   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
       dependsOn: Build
       variables:
           imagePullSecret: ${{parameters.imagePullSecret}}
