@@ -56,7 +56,7 @@ stages:
                       searchFolder: $(System.DefaultWorkingDirectory)
                       testRunTitle: Angular
                       testResultsFormat: JUnit
-                      testResultsFiles: "src/test-results/TESTS-results.xml"
+                      testResultsFiles: "src/test-results/Chrome_Headless_117.0.5938.132_(Linux_x86_64)/TESTS-results.xml"
 
                 - task: Npm@1
                   inputs:
