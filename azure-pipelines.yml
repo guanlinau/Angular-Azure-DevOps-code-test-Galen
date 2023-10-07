@@ -249,7 +249,7 @@ stages:
                     scriptType: 'bash'
                     scriptLocation: 'inlineScript'
                     inlineScript: |
-                        'az aks get-credentials --resource-group $(resourcesGroupName) --name $(aksClusterName)'
+                        az aks get-credentials --resource-group $(resourcesGroupName) --name $(aksClusterName)
                     
                 - script: |
                     SERVICE_IP=$(kubectl get svc $(clusterServiceName) --namespace=$(uatNamespace) -o=jsonpath="{.status.loadBalancer.ingress[0].ip}")
