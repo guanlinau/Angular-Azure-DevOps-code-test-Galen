@@ -303,7 +303,7 @@ stages:
                     # containerRegistry: $(containerRegistry)
                     command: 'login'
                 - script: |
-                      docker run -d -p 80:80 angular_dast $(containerRegistry)/$(imageRepository):$(tag)
+                      docker run -d -p 80:80 --name angular_dast $(containerRegistry)/$(imageRepository):$(tag)
                       docker ps -a
                   displayName: "Run a angular docker"
                 
