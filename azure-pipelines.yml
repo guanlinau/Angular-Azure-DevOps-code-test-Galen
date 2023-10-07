@@ -253,20 +253,23 @@ stages:
                     
                 - script: |
                     SERVICE_IP=$(kubectl get svc $(clusterServiceName) --namespace=$(uatNamespace) -o=jsonpath="{.status.loadBalancer.ingress[0].ip}")
-                    cat ~.kube/config
-                    mkdir galen
                     echo $SERVICE_IP
+                    echo "--------!----"
                     echo $SERVICE_IP > service_ip.txt
+                    echo "------------"
                     cat service_ip.txt
-                    echo "##vso[task.setvariable variable=ServiceIp]$SERVICE_IP"
-                  displayName: 'Get Service IP and set as Variable'
-
-                # This step below is to replace the test ip with loadbalancer ip in protractor.conf.js file
-                - script: |
-                      echo "Setting API_URL for e2e tests..."
-                      sed -i "s,http://localhost:4200/,http://$ServiceIp/,g" e2e/protractor.conf.js
+                   
+                    echo "Setting API_URL for e2e tests..."
+                      sed -i "s,http://localhost:4200/,http://$SERVICE_IP/,g" e2e/protractor.conf.js
                       cat e2e/protractor.conf.js
-                  displayName: Set API URL for e2e tests
+                  displayName: 'Get Service IP and set as Variable'
+ # echo "##vso[task.setvariable variable=ServiceIp]$SERVICE_IP"
+                # This step below is to replace the test ip with loadbalancer ip in protractor.conf.js file
+                # - script: |
+                #       echo "Setting API_URL for e2e tests..."
+                #       sed -i "s,http://localhost:4200/,http://$ServiceIp/,g" e2e/protractor.conf.js
+                #       cat e2e/protractor.conf.js
+                #   displayName: Set API URL for e2e tests
 
                 - task: NodeTool@0
                   inputs:
