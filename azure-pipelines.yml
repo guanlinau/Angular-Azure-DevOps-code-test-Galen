@@ -2,7 +2,7 @@
 # - master
 # trigger: none
 trigger:
-    - code_vulnerabilities
+    - dast_testing
 
 resources:
     - repo: self
@@ -43,99 +43,103 @@ variables:
     sonarCliSources: "."
 
 stages:
-    # - stage: TestAndCodeAnalysis
-    #   displayName: "Test&Code Analysis"
-    #   jobs:
-    #       - job: Compile_Test_Code_Analysis
-    #         displayName: "Compile_Test_Code_Analysis"
-    #         pool:
-    #             vmImage: $(vmImageName)
+    # This stage is for code compile, Unit testing, testing coverage, Linting and
+    # Static application security testing
+    - stage: TestAndCodeAnalysis
+      displayName: "Test&Code Analysis"
+      jobs:
+          - job: Compile_Test_Code_Analysis
+            displayName: "Compile_Test_Code_Analysis"
+            pool:
+                vmImage: $(vmImageName)
 
-    #         # Our angular project uses Node.js v14.21.3
-    #         steps:
-    #             - task: NodeTool@0
-    #               inputs:
-    #                   versionSource: "spec"
-    #                   versionSpec: "14.x"
-    #               displayName: "Install Node.js"
-    #             - task: Npm@1
-    #               inputs:
-    #                   command: "install"
-    #               displayName: "Install dependencies"
+            # Our angular project uses Node.js v14.21.3
+            steps:
+                - task: NodeTool@0
+                  inputs:
+                      versionSource: "spec"
+                      versionSpec: "14.x"
+                  displayName: "Install Node.js"
+                - task: Npm@1
+                  inputs:
+                      command: "install"
+                  displayName: "Install dependencies"
 
-    #             #  Build and compile the Angular project
-    #             - task: Npm@1
-    #               inputs:
-    #                   command: "custom"
-    #                   customCommand: "run build"
-    #               displayName: "Run build for compiling"
+                #  Build and compile the Angular project
+                - task: Npm@1
+                  inputs:
+                      command: "custom"
+                      customCommand: "run build"
+                  displayName: "Run build for compiling"
 
-    #             # Run unit tests and test coverage
-    #             - script: |
-    #                   npx ng test --code-coverage --watch=false
-    #               displayName: "Run unit tesing and access the code coverage"
+                # Run unit tests and test coverage
+                - script: |
+                      npx ng test --code-coverage --watch=false
+                  displayName: "Run unit tesing and access the code coverage"
 
-    #             # Accessing the code coverage
-    #             - task: PublishCodeCoverageResults@1
-    #               displayName: "Access and Publish code coverage results"
-    #               condition: succeededOrFailed()
-    #               inputs:
-    #                   codeCoverageTool: "Cobertura"
-    #                   summaryFileLocation: $(codeCoverageSummaryFileLocation)
-    #                   reportDirectory: $(codeCoverageReportDirectory)
-    #                   failIfCoverageEmpty: false
+                # Accessing the unit testing code coverage
+                - task: PublishCodeCoverageResults@1
+                  displayName: "Access and Publish code coverage results"
+                  condition: succeededOrFailed()
+                  inputs:
+                      codeCoverageTool: "Cobertura"
+                      summaryFileLocation: $(codeCoverageSummaryFileLocation)
+                      reportDirectory: $(codeCoverageReportDirectory)
+                      failIfCoverageEmpty: false
 
-    #             # Accessing the unit testing results report
-    #             - task: PublishTestResults@2
-    #               displayName: "Access and Publish unit test results"
-    #               condition: succeededOrFailed()
-    #               inputs:
-    #                   searchFolder: $(System.DefaultWorkingDirectory)
-    #                   testRunTitle: Angular
-    #                   testResultsFormat: JUnit
-    #                   testResultsFiles: $(unittestResultsFiles)
+                # Accessing the unit testing results report
+                - task: PublishTestResults@2
+                  displayName: "Access and Publish unit test results"
+                  condition: succeededOrFailed()
+                  inputs:
+                      searchFolder: $(System.DefaultWorkingDirectory)
+                      testRunTitle: Unit_test_report
+                      testResultsFormat: JUnit
+                      testResultsFiles: $(unittestResultsFiles)
 
-    #             # Linting and code analysis
-    #             - task: Npm@1
-    #               inputs:
-    #                   command: "custom"
-    #                   customCommand: "run lint"
-    #               displayName: "Run Linting and code quality analysis"
-    #       - job: Scan_Code_Vulnerabilities
-    #         # dependsOn: Compile_Test_Code_Analysis
-    #         displayName: "Scan_Code_Vulnerabilities_SonarCloud"
-    #         pool:
-    #             vmImage: $(vmImageName)
+                # Linting and code analysis
+                - task: Npm@1
+                  inputs:
+                      command: "custom"
+                      customCommand: "run lint"
+                  displayName: "Run Linting and code quality analysis"
 
-    #         # Using SonarCloud for static application security testing
-    #         steps:
-    #             - task: SonarCloudPrepare@1
-    #               displayName: 'Prepare Analysis Configuration'
-    #               inputs:
-    #                 SonarCloud: 'sonarcloud'
-    #                 organization: $(sonarOrganization)
-    #                 scannerMode: 'CLI'
-    #                 configMode: 'manual'
-    #                 cliProjectKey: $(sonarCliProjectKey)
-    #                 cliProjectName: $(sonarCliProjectName)
-    #                 cliSources: $(sonarCliSources)
-    #             - task: SonarCloudAnalyze@1
-    #               displayName: 'Run Code Analysis'
-    #               inputs:
-    #                 jdkversion: 'JAVA_HOME'
-    #             - task: SonarCloudPublish@1
-    #               displayName: 'Publish Quality Gate Result'
-    #               inputs:
-    #                 pollingTimeoutSec: '300'
+          # This job is for Static application security testing
+          - job: Scan_Code_Vulnerabilities
+            # dependsOn: Compile_Test_Code_Analysis
+            displayName: "SAST"
+            pool:
+                vmImage: $(vmImageName)
+
+            # Using SonarCloud for static application security testing
+            steps:
+                - task: SonarCloudPrepare@1
+                  displayName: 'Prepare Analysis Configuration'
+                  inputs:
+                    SonarCloud: 'sonarcloud'
+                    organization: $(sonarOrganization)
+                    scannerMode: 'CLI'
+                    configMode: 'manual'
+                    cliProjectKey: $(sonarCliProjectKey)
+                    cliProjectName: $(sonarCliProjectName)
+                    cliSources: $(sonarCliSources)
+                - task: SonarCloudAnalyze@1
+                  displayName: 'Run Code Analysis'
+                  inputs:
+                    jdkversion: 'JAVA_HOME'
+                - task: SonarCloudPublish@1
+                  displayName: 'Publish Quality Gate Result'
+                  inputs:
+                    pollingTimeoutSec: '300'
 
     # This stage is to Build Docker image, versioning artifacts and push images/artifacts into Azure Container Registry
     # This stage will be triggered on master branch only
     - stage: Build
-      displayName: Build and push Docker image stage
+      displayName: Build and push Docker image
       # condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
       jobs:
           - job: Build
-            displayName: Build
+            displayName: Build and push Docker image stage
             pool:
                 vmImage: $(vmImageName)
 
@@ -156,6 +160,52 @@ stages:
                       targetPath: "$(Build.SourcesDirectory)/manifests"
                       artifact: "manifests"
                       publishLocation: "pipeline"
+
+    # This stage is for Dynamic application security testing  
+    - stage: DAST
+      displayName: DAST
+      # condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+      dependsOn: Build 
+      jobs:
+      - job: DAST
+        displayName: Dynamic Application Security Test
+        pool: 
+          vmImage: 'ubuntu-latest'
+        steps:
+        - checkout: self
+
+        - task: Docker@2
+          inputs:
+            containerRegistry: 'angularwebacr-1506'
+            # containerRegistry: $(containerRegistry)
+            command: 'login'
+          displayName: Login to ACR
+
+        - script: |
+              docker run -d -p 80:8080 --name angular_dast $(containerRegistry)/$(imageRepository):$(tag)
+              docker ps -a
+          displayName: "Run a angular docker"
+
+        - bash: |
+            chmod -R 777  ./
+            docker run --rm -v $(pwd):/zap/wrk/:rw -t owasp/zap2docker-stable zap-full-scan.py -t http://$(ip -f inet -o addr show docker0 | awk '{print $4}' | cut -d '/' -f 1):80 -x xml_report.xml
+            true
+          displayName: 'Owasp Container Scan'
+
+        - powershell: |
+            $XslPath = "$(System.DefaultWorkingDirectory)/xml_to_nunit.xslt" 
+            $XmlInputPath = "xml_report.xml"
+            $XmlOutputPath = "converted_report.xml"
+            $XslTransform = New-Object System.Xml.Xsl.XslCompiledTransform
+            $XslTransform.Load($XslPath)
+            $XslTransform.Transform($XmlInputPath, $XmlOutputPath)
+          displayName: 'Owasp Generate Nunit type file'
+        - task: PublishTestResults@2
+          displayName: 'Publish Test Results'
+          inputs:
+            testRunTitle: DAST_code_scan_report
+            testResultsFormat: 'NUnit'
+            testResultsFiles: 'converted_report.xml'
 
     #  This stage is to deploy angular web into Uat env for User Acceptance Testing also as a deployed env for e2e
     #  This stage will be triggered on master branch only
@@ -222,6 +272,7 @@ stages:
                                   containers: |
                                       $(containerRegistry)/$(imageRepository):$(tag)
 
+
     # This stage is to conduct E2E test in a deployed environment-Uat env
     # This stage will be triggered on master branch and on Uat environment only
     - stage: E2E_Tests_UAT
@@ -251,7 +302,7 @@ stages:
                       SERVICE_IP=$(kubectl get svc $(clusterServiceName) --namespace=$(uatNamespace) -o=jsonpath="{.status.loadBalancer.ingress[0].ip}")
 
                       echo "Setting API_URL for e2e tests..."
-                        sed -i "s,http://localhost:4200/,http://$SERVICE_IP/,g" e2e/protractor.conf.js
+                      sed -i "s,http://localhost:4200/,http://$SERVICE_IP/,g" e2e/protractor.conf.js
                   displayName: "Get AKS Service IP and replace it in protractor.conf.js"
 
                 - task: NodeTool@0
@@ -280,3 +331,12 @@ stages:
                       command: "custom"
                       customCommand: "run e2e"
                   continueOnError: true
+
+
+    
+
+
+
+                    
+
+
