@@ -371,9 +371,7 @@ stages:
                   condition: always()
 
                 - script: |
-                    ls -alR
                     sudo chmod 777 owaspzap/test-results.xml
-                    sudo chmod 777 owaspzap/report.html
                     ls -alR
                     cat $(System.DefaultWorkingDirectory)/owaspzap/test-results.xml
                      
@@ -383,8 +381,7 @@ stages:
                   displayName: 'Publish DAST Test Results'
                   inputs:
                     testResultsFormat: 'NUnit'
-                    # testResultsFiles: '$(System.DefaultWorkingDirectory)owaspzap/test-results.xml'
-                    testResultsFiles: '$(System.DefaultWorkingDirectory)/owaspzap/report.html'
+                    testResultsFiles: '$(System.DefaultWorkingDirectory)/owaspzap/test-results.xml'
                     testRunTitle: 'DAST_Owasp'
                   condition: always()
 
