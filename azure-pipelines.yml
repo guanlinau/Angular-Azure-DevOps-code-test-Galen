@@ -381,9 +381,9 @@ stages:
                 - task: PublishTestResults@2
                   displayName: 'Publish DAST Test Results'
                   inputs:
-                    # searchFolder: $(System.DefaultWorkingDirectory)
                     testResultsFormat: 'NUnit'
-                    testResultsFiles: '$(System.DefaultWorkingDirectory)owaspzap/test-results.xml'
+                    # testResultsFiles: '$(System.DefaultWorkingDirectory)owaspzap/test-results.xml'
+                    testResultsFiles: '$(System.DefaultWorkingDirectory)owaspzap/report.html'
                     testRunTitle: 'DAST_Owasp'
                   condition: always()
 
