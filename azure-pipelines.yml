@@ -243,23 +243,17 @@ stages:
 
                 # This step is qu get the loadbalancer IP in uat environment for e2e test
                 
-                - task: Kubernetes@1
-                  displayName: Set kubectl context
+                - task: AzureCLI@2
                   inputs:
-                    connectionType: 'Azure Resource Manager'
-                    azureSubscriptionEndpoint: $(azureSubscriptionEndpoint)
-                    azureResourceGroup: $(resourcesGroupName)
-                    kubernetesCluster: $(aksClusterName)
-                    useClusterAdmin: true
-                    namespace: $(uatNamespace)
-                    command: 'get'
-                    arguments: 'svc $(clusterServiceName) --namespace=$(uatNamespace) -o=jsonpath="{.status.loadBalancer.ingress[0].ip}"'
-                    secretType: 'dockerRegistry'
-                    containerRegistryType: 'Azure Container Registry'
+                    azureSubscription: $(azureSubscriptionEndpoint)
+                    scriptType: 'bash'
+                    scriptLocation: 'inlineScript'
+                    inlineScript: |
+                        'az aks get-credentials --resource-group $(resourcesGroupName) --name $(aksClusterName)'
                     
                 - script: |
                     SERVICE_IP=$(kubectl get svc $(clusterServiceName) --namespace=$(uatNamespace) -o=jsonpath="{.status.loadBalancer.ingress[0].ip}")
-                    cat .kube/config
+                    cat ~.kube/config
                     mkdir galen
                     echo $SERVICE_IP
                     echo $SERVICE_IP > service_ip.txt
