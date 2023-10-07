@@ -156,9 +156,15 @@ stages:
                       targetPath: "$(Build.SourcesDirectory)/manifests"
                       artifact: "manifests"
                       publishLocation: "pipeline"
-    - stage: 'buildstage'
+
+               
+    - stage: DAST
+      displayName: Dynamic Application Security Testing
+      # condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+      dependsOn: Build 
       jobs:
-      - job: 'buildjob'
+      - job: DAST
+        displayName: Dynamic Application Security Testing
         pool: 
           vmImage: 'ubuntu-latest'
         steps:
@@ -189,7 +195,7 @@ stages:
             $XslTransform = New-Object System.Xml.Xsl.XslCompiledTransform
             $XslTransform.Load($XslPath)
             $XslTransform.Transform($XmlInputPath, $XmlOutputPath)
-          displayName: 'PowerShell Script'
+          displayName: 'Owasp Generate Nunit type file'
         - task: PublishTestResults@2
           displayName: 'Publish Test Results'
           inputs:
@@ -324,105 +330,7 @@ stages:
     #               continueOnError: true
 
 
-    # - stage: DAST
-    #   displayName: Dynamic Application Security Testing
-    #   # condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
-    #   dependsOn: Build
-    #   jobs:
-    #       - job: DAST
-    #         displayName: Dynamic Application Security Testing
-    #         pool:
-    #             vmImage: $(vmImageName)
-    #         steps:
-    #             - checkout: self
-    #             - task: Docker@2
-    #               inputs:
-    #                 containerRegistry: 'angularwebacr-1506'
-    #                 # containerRegistry: $(containerRegistry)
-    #                 command: 'login'
-    #               displayName: Login to ACR
-
-    #             - script: |
-    #                   docker run -d -p 80:8080 --name angular_dast $(containerRegistry)/$(imageRepository):$(tag)
-    #                   docker ps -a
-    #               displayName: "Run a angular docker"
-                
-    #             - task: owaspzap@1
-    #               inputs:
-    #                  aggressivemode: false
-    #                  threshold: '50'
-    #                  port: '80'
-    #               displayName: 'Owasp Scan'
-                
-    #             - script: |
-    #                   sudo npm install -g handlebars-cmd
-    #                   sudo cat <<EOF > owaspzap/nunit-template.hbs
-    #                   {{#each site}}
-    #                   <test-run
-    #                       id="2"
-    #                       name="Owasp test"
-    #                       start-time="{{../[@generated]}}"  >
-    #                       <test-suite
-    #                           id="{{@index}}"
-    #                           type="Assembly"
-    #                           name="{{[@name]}}"
-    #                           result="Failed"
-    #                           failed="{{alerts.length}}">
-    #                           <attachments>
-    #                               <attachment>
-    #                                   <filePath>owaspzap/report.html</filePath>
-    #                               </attachment>
-    #                           </attachments>
-    #                       {{#each alerts}}<test-case
-    #                           id="{{@index}}"
-    #                           name="{{alert}}"
-    #                           result="Failed"
-    #                           fullname="{{alert}}"
-    #                           time="1">
-    #                               <failure>
-    #                                       <message>
-    #                                       <![CDATA[{{{desc}}}]]>
-    #                                   </message>
-    #                                   <stack-trace>
-    #                                       <![CDATA[
-    #                   Solution:
-    #                   {{{solution}}}
-    #                   Reference:
-    #                   {{{reference}}}
-    #                   instances:{{#each instances}}
-    #                   * {{uri}}
-    #                       - {{method}}
-    #                       {{#if evidence}}- {{{evidence}}}{{/if}}
-    #                                       {{/each}}]]>
-    #                                   </stack-trace>
-    #                               </failure>
-    #                       </test-case>
-    #                       {{/each}}
-    #                       </test-suite>
-    #                   </test-run>
-    #                   {{/each}}
-    #                   EOF
-    #               displayName: 'Owasp Nunit Template'
-    #               condition: always()
-                
-    #             - script: ' handlebars owaspzap/report.json < owaspzap/nunit-template.hbs > owaspzap/test-results.xml'
-    #               displayName: 'generate nunit type file'
-    #               condition: always()
-
-    #             - script: |
-    #                 sudo chmod 777 owaspzap/test-results.xml
-    #                 ls -alR
-    #                 cat $(System.DefaultWorkingDirectory)/owaspzap/test-results.xml
-                     
-    #               displayName: 'List all files'
-
-    #             - task: PublishTestResults@2
-    #               displayName: 'Publish DAST Test Results'
-    #               inputs:
-    #                 testResultsFormat: 'NUnit'
-    #                 testResultsFiles: '$(System.DefaultWorkingDirectory)/owaspzap/test-results.xml'
-    #                 testRunTitle: 'DAST_Owasp'
-    #               condition: always()
+    
 
 
 
