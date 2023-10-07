@@ -1,8 +1,14 @@
 # trigger:
-# - master
-# trigger: none
-trigger:
-    - Augular-DevOps-YAML-pipleine-Galen
+#   branches:
+#   - "*"
+trigger: none
+# trigger:
+#     - Augular-DevOps-YAML-pipleine-Galen
+
+# pr:
+#   branches:
+#     include:
+#     - master
 
 pool:
     vmImage: ubuntu-latest
