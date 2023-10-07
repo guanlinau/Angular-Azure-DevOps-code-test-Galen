@@ -1,8 +1,8 @@
 # trigger:
 # - master
-# trigger: none
-trigger: 
-    - code_vulnerabilities
+trigger: none
+# trigger: 
+#     - code_vulnerabilities
     
 resources:
     - repo: self
@@ -115,6 +115,7 @@ stages:
             # Using SonarCloud for static application security testing
             steps:
                 - task: SonarCloudPrepare@1
+                  displayName: 'Prepare Analysis Configuration'
                   inputs:
                     SonarCloud: 'sonarcloud'
                     organization: $(sonarOrganization)
@@ -128,6 +129,7 @@ stages:
                   inputs:
                     jdkversion: 'JAVA_HOME'
                 - task: SonarCloudPublish@1
+                  displayName: 'Publish Quality Gate Result'
                   inputs:
                     pollingTimeoutSec: '300'
     
