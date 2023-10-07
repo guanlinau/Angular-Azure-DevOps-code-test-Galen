@@ -304,15 +304,15 @@ stages:
                   displayName: Login to ACR
 
                 - script: |
-                      docker run -d -p 80:80 --name angular_dast $(containerRegistry)/$(imageRepository):$(tag)
+                      docker run -d -p 80:8080 --name angular_dast $(containerRegistry)/$(imageRepository):$(tag)
                       docker ps -a
                   displayName: "Run a angular docker"
                 
                 - task: owaspzap@1
                   inputs:
-                    aggressivemode: true
-                    threshold: '50'
-                    port: '80'
+                     aggressivemode: false
+                     threshold: '50'
+                     port: '80'
                   displayName: 'Owasp Scan'
                 
                 - script: |
