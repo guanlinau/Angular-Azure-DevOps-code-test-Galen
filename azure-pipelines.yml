@@ -373,6 +373,7 @@ stages:
                 - script: |
                     ls -alR
                     sudo chmod 777 owaspzap/test-results.xml
+                    ls -alR
                     cat $(System.DefaultWorkingDirectory)/owaspzap/test-results.xml
                      
                   displayName: 'List all files'
@@ -380,9 +381,9 @@ stages:
                 - task: PublishTestResults@2
                   displayName: 'Publish DAST Test Results'
                   inputs:
-                    searchFolder: $(System.DefaultWorkingDirectory)
-                    testResultsFormat: 'JUnit'
-                    testResultsFiles: 'owaspzap/test-results.xml'
+                    # searchFolder: $(System.DefaultWorkingDirectory)
+                    testResultsFormat: 'NUnit'
+                    testResultsFiles: '$(System.DefaultWorkingDirectory)owaspzap/test-results.xml'
                     testRunTitle: 'DAST_Owasp'
                   condition: always()
 
