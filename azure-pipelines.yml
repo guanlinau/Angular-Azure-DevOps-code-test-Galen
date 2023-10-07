@@ -1,38 +1,17 @@
 # trigger:
-<<<<<<< HEAD
 # - master
 # trigger: none
 trigger:
     - code_vulnerabilities
 
-=======
-#   branches:
-#   - "*"
-trigger: none
-# trigger:
-#     - Augular-DevOps-YAML-pipleine-Galen
-
-# pr:
-#   branches:
-#     include:
-#     - master
-
-pool:
-    vmImage: ubuntu-latest
-
->>>>>>> master
 resources:
     - repo: self
 
 variables:
-
     CI: true
-<<<<<<< HEAD
     vmImageName: "ubuntu-latest"
     # Azure Container Registry
     # Container registry service connection established during pipeline creation
-=======
->>>>>>> master
     dockerRegistryServiceConnection: "453a3951-5cbc-4f12-9589-8ad8592ee4dd"
     imageRepository: "angularwebdevops"
     containerRegistry: "angularwebacr.azurecr.io"
@@ -58,14 +37,10 @@ variables:
     codeCoverageReportDirectory: "coverage/angular11-testing-examples/"
 
     # SonarCloud
-    sonarOrganization: 'guanlinau'
-    sonarCliProjectKey: 'guanlinau_Angular-Azure-DevOps-code-test-Galen'
-    sonarCliProjectName: 'Angular-Azure-DevOps-code-test-Galen'
-    sonarCliSources: '.'
-
-
-
-
+    sonarOrganization: "guanlinau"
+    sonarCliProjectKey: "guanlinau_Angular-Azure-DevOps-code-test-Galen"
+    sonarCliProjectName: "Angular-Azure-DevOps-code-test-Galen"
+    sonarCliSources: "."
 
 stages:
     # - stage: TestAndCodeAnalysis
@@ -265,19 +240,19 @@ stages:
 
                 - task: AzureCLI@2
                   inputs:
-                    azureSubscription: $(azureSubscriptionEndpoint)
-                    scriptType: 'bash'
-                    scriptLocation: 'inlineScript'
-                    inlineScript: |
-                        az aks get-credentials --resource-group $(resourcesGroupName) --name $(aksClusterName)
+                      azureSubscription: $(azureSubscriptionEndpoint)
+                      scriptType: "bash"
+                      scriptLocation: "inlineScript"
+                      inlineScript: |
+                          az aks get-credentials --resource-group $(resourcesGroupName) --name $(aksClusterName)
                   displayName: "Set up aks context"
 
                 - script: |
-                    SERVICE_IP=$(kubectl get svc $(clusterServiceName) --namespace=$(uatNamespace) -o=jsonpath="{.status.loadBalancer.ingress[0].ip}")
+                      SERVICE_IP=$(kubectl get svc $(clusterServiceName) --namespace=$(uatNamespace) -o=jsonpath="{.status.loadBalancer.ingress[0].ip}")
 
-                    echo "Setting API_URL for e2e tests..."
-                      sed -i "s,http://localhost:4200/,http://$SERVICE_IP/,g" e2e/protractor.conf.js
-                  displayName: 'Get AKS Service IP and replace it in protractor.conf.js'
+                      echo "Setting API_URL for e2e tests..."
+                        sed -i "s,http://localhost:4200/,http://$SERVICE_IP/,g" e2e/protractor.conf.js
+                  displayName: "Get AKS Service IP and replace it in protractor.conf.js"
 
                 - task: NodeTool@0
                   inputs:
