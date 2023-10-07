@@ -93,7 +93,7 @@ stages:
                   condition: succeededOrFailed()
                   inputs:
                       searchFolder: $(System.DefaultWorkingDirectory)
-                      testRunTitle: Angular
+                      testRunTitle: Unit_test_report
                       testResultsFormat: JUnit
                       testResultsFiles: $(unittestResultsFiles)
 
@@ -107,7 +107,7 @@ stages:
           # This job is for Static application security testing
           - job: Scan_Code_Vulnerabilities
             # dependsOn: Compile_Test_Code_Analysis
-            displayName: "Static Application Security Test"
+            displayName: "SAST"
             pool:
                 vmImage: $(vmImageName)
 
@@ -163,7 +163,7 @@ stages:
 
     # This stage is for Dynamic application security testing  
     - stage: DAST
-      displayName: Dynamic Application Security Test
+      displayName: DAST
       # condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
       dependsOn: Build 
       jobs:
@@ -203,6 +203,7 @@ stages:
         - task: PublishTestResults@2
           displayName: 'Publish Test Results'
           inputs:
+            testRunTitle: DAST_code_scan_report
             testResultsFormat: 'NUnit'
             testResultsFiles: 'converted_report.xml'
 
