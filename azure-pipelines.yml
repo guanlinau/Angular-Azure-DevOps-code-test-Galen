@@ -1,29 +1,24 @@
 # trigger:
-#   branches:
-#   - "*"
-trigger: none
-# trigger:
-#     - Augular-DevOps-YAML-pipleine-Galen
-
-# pr:
-#   branches:
-#     include:
-#     - master
-
-pool:
-    vmImage: ubuntu-latest
+# - master
+# trigger: none
+trigger:
+    - code_vulnerabilities
 
 resources:
     - repo: self
 
 variables:
-    # Container registry service connection established during pipeline creation
     CI: true
+    vmImageName: "ubuntu-latest"
+    # Azure Container Registry
+    # Container registry service connection established during pipeline creation
     dockerRegistryServiceConnection: "453a3951-5cbc-4f12-9589-8ad8592ee4dd"
     imageRepository: "angularwebdevops"
     containerRegistry: "angularwebacr.azurecr.io"
     dockerfilePath: "$(Build.SourcesDirectory)/Dockerfile"
     tag: "$(Build.BuildId)"
+
+    # Azure kubernetes service
     imageSecret: "image-key"
     uatNamespace: "angular-web-uat"
     proNamespace: "angular-web-pro"
@@ -31,76 +26,113 @@ variables:
     proReplicasNumber: 2
     uatEnvironment: "uat.angular-web-uat"
     proEnvironment: "pro.angular-web-pro"
-    vmImageName: "ubuntu-latest"
     azureSubscriptionEndpoint: "e2e_azureSubscriptionEndpoint"
     resourcesGroupName: "angular-web-sg"
     aksClusterName: "angular-web-aks"
     clusterServiceName: "angular-web-service"
 
+    # unit testing
+    unittestResultsFiles: "src/test-results/Chrome_Headless_117.0.5938.*_(Linux_x86_64)/TESTS-*.xml"
+    codeCoverageSummaryFileLocation: "coverage/angular11-testing-examples/cobertura-coverage.xml"
+    codeCoverageReportDirectory: "coverage/angular11-testing-examples/"
 
+    # SonarCloud
+    sonarOrganization: "guanlinau"
+    sonarCliProjectKey: "guanlinau_Angular-Azure-DevOps-code-test-Galen"
+    sonarCliProjectName: "Angular-Azure-DevOps-code-test-Galen"
+    sonarCliSources: "."
 
 stages:
-    - stage: "Test_Code_Analysis"
-      displayName: "Test&Code Analysis"
-      jobs:
-          - job: "Compile_Test_Code_Analysis"
-            displayName: "Preparetion and test"
-            
-            # Our angular project uses Node.js v14.21.3
-            steps:
-                - task: NodeTool@0
-                  inputs:
-                      versionSource: "spec"
-                      versionSpec: "14.x"
-                  displayName: "Install Node.js"
-                - task: Npm@1
-                  inputs:
-                      command: "install"
-                  displayName: "Install dependencies"
-                
-                #  Build and compile the Angular project
-                - task: Npm@1
-                  inputs:
-                      command: "custom"
-                      customCommand: "run build"
-                  displayName: "Run build for compiling"
-                
-                # Run unit tests and test coverage
-                - script: |
-                      npx ng test --code-coverage --watch=false
-                  displayName: "Run unit tesing and access the code coverage"
+    # - stage: TestAndCodeAnalysis
+    #   displayName: "Test&Code Analysis"
+    #   jobs:
+    #       - job: Compile_Test_Code_Analysis
+    #         displayName: "Compile_Test_Code_Analysis"
+    #         pool:
+    #             vmImage: $(vmImageName)
 
-                # Accessing the code coverage
-                - task: PublishCodeCoverageResults@1
-                  displayName: "Access and Publish code coverage results"
-                  condition: succeededOrFailed()
-                  inputs:
-                      codeCoverageTool: "Cobertura"
-                      summaryFileLocation: "coverage/angular11-testing-examples/cobertura-coverage.xml"
-                      reportDirectory: "coverage/angular11-testing-examples/"
-                      failIfCoverageEmpty: false
-                    
-                # Accessing the unit testing results report
-                - task: PublishTestResults@2
-                  displayName: "Access and Publish unit test results"
-                  condition: succeededOrFailed()
-                  inputs:
-                      searchFolder: $(System.DefaultWorkingDirectory)
-                      testRunTitle: Angular
-                      testResultsFormat: JUnit
-                      testResultsFiles: "src/test-results/Chrome_Headless_117.0.5938.132_(Linux_x86_64)/TESTS-results.xml"
+    #         # Our angular project uses Node.js v14.21.3
+    #         steps:
+    #             - task: NodeTool@0
+    #               inputs:
+    #                   versionSource: "spec"
+    #                   versionSpec: "14.x"
+    #               displayName: "Install Node.js"
+    #             - task: Npm@1
+    #               inputs:
+    #                   command: "install"
+    #               displayName: "Install dependencies"
 
-                # Linting and code analysis
-                - task: Npm@1
-                  inputs:
-                      command: "custom"
-                      customCommand: "run lint"
-                  displayName: "Run Linting and code quality analysis"
+    #             #  Build and compile the Angular project
+    #             - task: Npm@1
+    #               inputs:
+    #                   command: "custom"
+    #                   customCommand: "run build"
+    #               displayName: "Run build for compiling"
+
+    #             # Run unit tests and test coverage
+    #             - script: |
+    #                   npx ng test --code-coverage --watch=false
+    #               displayName: "Run unit tesing and access the code coverage"
+
+    #             # Accessing the code coverage
+    #             - task: PublishCodeCoverageResults@1
+    #               displayName: "Access and Publish code coverage results"
+    #               condition: succeededOrFailed()
+    #               inputs:
+    #                   codeCoverageTool: "Cobertura"
+    #                   summaryFileLocation: $(codeCoverageSummaryFileLocation)
+    #                   reportDirectory: $(codeCoverageReportDirectory)
+    #                   failIfCoverageEmpty: false
+
+    #             # Accessing the unit testing results report
+    #             - task: PublishTestResults@2
+    #               displayName: "Access and Publish unit test results"
+    #               condition: succeededOrFailed()
+    #               inputs:
+    #                   searchFolder: $(System.DefaultWorkingDirectory)
+    #                   testRunTitle: Angular
+    #                   testResultsFormat: JUnit
+    #                   testResultsFiles: $(unittestResultsFiles)
+
+    #             # Linting and code analysis
+    #             - task: Npm@1
+    #               inputs:
+    #                   command: "custom"
+    #                   customCommand: "run lint"
+    #               displayName: "Run Linting and code quality analysis"
+    #       - job: Scan_Code_Vulnerabilities
+    #         # dependsOn: Compile_Test_Code_Analysis
+    #         displayName: "Scan_Code_Vulnerabilities_SonarCloud"
+    #         pool:
+    #             vmImage: $(vmImageName)
+
+    #         # Using SonarCloud for static application security testing
+    #         steps:
+    #             - task: SonarCloudPrepare@1
+    #               displayName: 'Prepare Analysis Configuration'
+    #               inputs:
+    #                 SonarCloud: 'sonarcloud'
+    #                 organization: $(sonarOrganization)
+    #                 scannerMode: 'CLI'
+    #                 configMode: 'manual'
+    #                 cliProjectKey: $(sonarCliProjectKey)
+    #                 cliProjectName: $(sonarCliProjectName)
+    #                 cliSources: $(sonarCliSources)
+    #             - task: SonarCloudAnalyze@1
+    #               displayName: 'Run Code Analysis'
+    #               inputs:
+    #                 jdkversion: 'JAVA_HOME'
+    #             - task: SonarCloudPublish@1
+    #               displayName: 'Publish Quality Gate Result'
+    #               inputs:
+    #                 pollingTimeoutSec: '300'
 
     # This stage is to Build Docker image, versioning artifacts and push images/artifacts into Azure Container Registry
+    # This stage will be triggered on master branch only
     - stage: Build
       displayName: Build and push Docker image stage
-      #   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+      # condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
       jobs:
           - job: Build
             displayName: Build
@@ -124,11 +156,12 @@ stages:
                       targetPath: "$(Build.SourcesDirectory)/manifests"
                       artifact: "manifests"
                       publishLocation: "pipeline"
-    
-    #  This stage is to deploy angular web into Uat env for User Acceptance Testing also as a deployed env for e2e 
+
+    #  This stage is to deploy angular web into Uat env for User Acceptance Testing also as a deployed env for e2e
+    #  This stage will be triggered on master branch only
     - stage: Deploy_to_UAT
       displayName: Deploy to UAT stage
-      #   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+      # condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
       dependsOn: Build
       variables:
           imagePullSecret: $(imageSecret)
@@ -188,11 +221,12 @@ stages:
                                       $(imagePullSecret)
                                   containers: |
                                       $(containerRegistry)/$(imageRepository):$(tag)
-    
+
     # This stage is to conduct E2E test in a deployed environment-Uat env
+    # This stage will be triggered on master branch and on Uat environment only
     - stage: E2E_Tests_UAT
       displayName: Run e2e tests on UAT
-      #   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+      # condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
       dependsOn: Deploy_to_UAT
       jobs:
           - job: E2E_Tests
@@ -203,34 +237,22 @@ stages:
                 - checkout: self
 
                 # This step is qu get the loadbalancer IP in uat environment for e2e test
-                - task: Kubernetes@1
-                  displayName: Set kubectl context
-                  inputs:
-                    connectionType: 'Azure Resource Manager'
-                    azureSubscriptionEndpoint: $(azureSubscriptionEndpoint)
-                    azureResourceGroup: $(resourcesGroupName)
-                    kubernetesCluster: $(aksClusterName)
-                    useClusterAdmin: true
-                    namespace: $(uatNamespace)
-                    command: 'get'
-                    arguments: 'svc $(clusterServiceName) --namespace=$(uatNamespace) -o=jsonpath="{.status.loadBalancer.ingress[0].ip}"'
-                    secretType: 'dockerRegistry'
-                    containerRegistryType: 'Azure Container Registry'
-                    
-                - script: |
-                    SERVICE_IP=$(kubectl get svc $(clusterServiceName) --namespace=$(uatNamespace) -o=jsonpath="{.status.loadBalancer.ingress[0].ip}")
-                    echo $SERVICE_IP
-                    echo $SERVICE_IP > service_ip.txt
-                    eat service_ip.txt
-                    echo "##vso[task.setvariable variable=ServiceIp]$SERVICE_IP"
-                  displayName: 'Get Service IP and set as Variable'
 
-                # This step below is to replace the test ip with loadbalancer ip in protractor.conf.js file
+                - task: AzureCLI@2
+                  inputs:
+                      azureSubscription: $(azureSubscriptionEndpoint)
+                      scriptType: "bash"
+                      scriptLocation: "inlineScript"
+                      inlineScript: |
+                          az aks get-credentials --resource-group $(resourcesGroupName) --name $(aksClusterName)
+                  displayName: "Set up aks context"
+
                 - script: |
+                      SERVICE_IP=$(kubectl get svc $(clusterServiceName) --namespace=$(uatNamespace) -o=jsonpath="{.status.loadBalancer.ingress[0].ip}")
+
                       echo "Setting API_URL for e2e tests..."
-                      sed -i "s,http://localhost:4200/,http://$ServiceIp/,g" e2e/protractor.conf.js
-                      cat e2e/protractor.conf.js
-                  displayName: Set API URL for e2e tests
+                        sed -i "s,http://localhost:4200/,http://$SERVICE_IP/,g" e2e/protractor.conf.js
+                  displayName: "Get AKS Service IP and replace it in protractor.conf.js"
 
                 - task: NodeTool@0
                   inputs:
@@ -246,7 +268,9 @@ stages:
                 #  This step is to update the project chrome driver to 117.0.5938.132,
                 #  So it can align with the chrome driver version in ubuntu server of the azure pipeline
                 - script: |
-                      node node_modules/.bin/webdriver-manager update --versions.chrome=117.0.5938
+                      # Ubuntu chrome version
+                        google-chrome --version
+                      node node_modules/.bin/webdriver-manager update --gecko false
                       node node_modules/.bin/webdriver-manager status
                   displayName: "update project chrome version"
 
@@ -255,3 +279,4 @@ stages:
                   inputs:
                       command: "custom"
                       customCommand: "run e2e"
+                  continueOnError: true
