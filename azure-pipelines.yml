@@ -8,13 +8,18 @@ resources:
     - repo: self
 
 variables:
-    # Container registry service connection established during pipeline creation
+    
     CI: true
+    vmImageName: "ubuntu-latest"
+    # Azure Container Registry
+    # Container registry service connection established during pipeline creation
     dockerRegistryServiceConnection: "453a3951-5cbc-4f12-9589-8ad8592ee4dd"
     imageRepository: "angularwebdevops"
     containerRegistry: "angularwebacr.azurecr.io"
     dockerfilePath: "$(Build.SourcesDirectory)/Dockerfile"
     tag: "$(Build.BuildId)"
+
+    # Azure kubernetes service
     imageSecret: "image-key"
     uatNamespace: "angular-web-uat"
     proNamespace: "angular-web-pro"
@@ -22,15 +27,23 @@ variables:
     proReplicasNumber: 2
     uatEnvironment: "uat.angular-web-uat"
     proEnvironment: "pro.angular-web-pro"
-    vmImageName: "ubuntu-latest"
     azureSubscriptionEndpoint: "e2e_azureSubscriptionEndpoint"
     resourcesGroupName: "angular-web-sg"
     aksClusterName: "angular-web-aks"
     clusterServiceName: "angular-web-service"
+
+    # unit testing
+    unittestResultsFiles: "src/test-results/Chrome_Headless_117.0.5938.*_(Linux_x86_64)/TESTS-*.xml"
+    codeCoverageSummaryFileLocation: "coverage/angular11-testing-examples/cobertura-coverage.xml"
+    codeCoverageReportDirectory: "coverage/angular11-testing-examples/"
+
+    # SonarCloud
     sonarOrganization: 'guanlinau'
     sonarCliProjectKey: 'guanlinau_Angular-Azure-DevOps-code-test-Galen'
     sonarCliProjectName: 'Angular-Azure-DevOps-code-test-Galen'
     sonarCliSources: '.'
+
+    
 
 
 
@@ -73,8 +86,8 @@ stages:
                   condition: succeededOrFailed()
                   inputs:
                       codeCoverageTool: "Cobertura"
-                      summaryFileLocation: "coverage/angular11-testing-examples/cobertura-coverage.xml"
-                      reportDirectory: "coverage/angular11-testing-examples/"
+                      summaryFileLocation: $(codeCoverageSummaryFileLocation)
+                      reportDirectory: $(codeCoverageReportDirectory)
                       failIfCoverageEmpty: false
                 
                 # Accessing the unit testing results report
@@ -85,11 +98,7 @@ stages:
                       searchFolder: $(System.DefaultWorkingDirectory)
                       testRunTitle: Angular
                       testResultsFormat: JUnit
-                      testResultsFiles: "src/test-results/Chrome_Headless_117.0.5938.132_(Linux_x86_64)/TESTS-results.xml"
-                - script: |
-                      ls -al src/test-results
-                      ls -al src/test-results
-
+                      testResultsFiles: $(unittestResultsFiles)
 
                 # Linting and code analysis
                 - task: Npm@1
@@ -126,7 +135,7 @@ stages:
     # This stage will be triggered on master branch only
     - stage: Build
       displayName: Build and push Docker image stage
-      #   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+      condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
       jobs:
           - job: Build
             displayName: Build
@@ -155,7 +164,7 @@ stages:
     #  This stage will be triggered on master branch only
     - stage: Deploy_to_UAT
       displayName: Deploy to UAT stage
-      #   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+      condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
       dependsOn: Build
       variables:
           imagePullSecret: $(imageSecret)
@@ -220,7 +229,7 @@ stages:
     # This stage will be triggered on master branch and on Uat environment only
     - stage: E2E_Tests_UAT
       displayName: Run e2e tests on UAT
-      #   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+      condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
       dependsOn: Deploy_to_UAT
       jobs:
           - job: E2E_Tests
