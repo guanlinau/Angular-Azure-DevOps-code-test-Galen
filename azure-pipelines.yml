@@ -250,26 +250,14 @@ stages:
                     scriptLocation: 'inlineScript'
                     inlineScript: |
                         az aks get-credentials --resource-group $(resourcesGroupName) --name $(aksClusterName)
+                  displayName: "Set up aks context"
                     
                 - script: |
                     SERVICE_IP=$(kubectl get svc $(clusterServiceName) --namespace=$(uatNamespace) -o=jsonpath="{.status.loadBalancer.ingress[0].ip}")
-                    echo $SERVICE_IP
-                    echo "--------!----"
-                    echo $SERVICE_IP > service_ip.txt
-                    echo "------------"
-                    cat service_ip.txt
                    
                     echo "Setting API_URL for e2e tests..."
                       sed -i "s,http://localhost:4200/,http://$SERVICE_IP/,g" e2e/protractor.conf.js
-                      cat e2e/protractor.conf.js
-                  displayName: 'Get Service IP and set as Variable'
- # echo "##vso[task.setvariable variable=ServiceIp]$SERVICE_IP"
-                # This step below is to replace the test ip with loadbalancer ip in protractor.conf.js file
-                # - script: |
-                #       echo "Setting API_URL for e2e tests..."
-                #       sed -i "s,http://localhost:4200/,http://$ServiceIp/,g" e2e/protractor.conf.js
-                #       cat e2e/protractor.conf.js
-                #   displayName: Set API URL for e2e tests
+                  displayName: 'Get AKS Service IP and replace it in protractor.conf.js'
 
                 - task: NodeTool@0
                   inputs:
@@ -285,7 +273,9 @@ stages:
                 #  This step is to update the project chrome driver to 117.0.5938.132,
                 #  So it can align with the chrome driver version in ubuntu server of the azure pipeline
                 - script: |
-                      node node_modules/.bin/webdriver-manager update --versions.chrome=117.0.5938
+                      # Ubuntu chrome version
+                        google-chrome --version
+                      node node_modules/.bin/webdriver-manager update --gecko false
                       node node_modules/.bin/webdriver-manager status
                   displayName: "update project chrome version"
 
