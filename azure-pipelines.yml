@@ -87,7 +87,8 @@ stages:
                       testResultsFormat: JUnit
                       testResultsFiles: "src/test-results/Chrome_Headless_117.0.5938.132_(Linux_x86_64)/TESTS-results.xml"
                 - script: |
-                      ls -al src/results
+                      ls -al src/test-results
+                      ls -al src/test-results
 
 
                 # Linting and code analysis
@@ -97,7 +98,7 @@ stages:
                       customCommand: "run lint"
                   displayName: "Run Linting and code quality analysis"
           - job: Scan_Code_Vulnerabilities
-            dependsOn: Compile_Test_Code_Analysis
+            # dependsOn: Compile_Test_Code_Analysis
             displayName: "Scan_Code_Vulnerabilities_SonarCloud"
             pool:
                 vmImage: $(vmImageName)
