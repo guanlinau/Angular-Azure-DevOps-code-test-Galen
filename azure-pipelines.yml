@@ -27,6 +27,10 @@ variables:
     resourcesGroupName: "angular-web-sg"
     aksClusterName: "angular-web-aks"
     clusterServiceName: "angular-web-service"
+    sonarOrganization: 'guanlinau'
+    sonarCliProjectKey: 'guanlinau_Angular-Azure-DevOps-code-test-Galen'
+    sonarCliProjectName: 'Angular-Azure-DevOps-code-test-Galen'
+    sonarCliSources: '.'
 
 
 
@@ -35,7 +39,7 @@ stages:
       displayName: "Test&Code Analysis"
       jobs:
           - job: Compile_Test_Code_Analysis
-            displayName: "Preparetion and test"
+            displayName: "Compile_Test_Code_Analysis"
             pool:
                 vmImage: $(vmImageName)
             
@@ -62,6 +66,9 @@ stages:
                 - script: |
                       npx ng test --code-coverage --watch=false
                   displayName: "Run unit tesing and access the code coverage"
+                - script: |
+                      ls -al
+                  
 
                 # Accessing the code coverage
                 - task: PublishCodeCoverageResults@1
@@ -72,7 +79,8 @@ stages:
                       summaryFileLocation: "coverage/angular11-testing-examples/cobertura-coverage.xml"
                       reportDirectory: "coverage/angular11-testing-examples/"
                       failIfCoverageEmpty: false
-                    
+                - script: |
+                      ls -al
                 # Accessing the unit testing results report
                 - task: PublishTestResults@2
                   displayName: "Access and Publish unit test results"
@@ -82,6 +90,9 @@ stages:
                       testRunTitle: Angular
                       testResultsFormat: JUnit
                       testResultsFiles: "src/test-results/Chrome_Headless_117.0.5938.132_(Linux_x86_64)/TESTS-results.xml"
+                - script: |
+                      ls -al src
+
 
                 # Linting and code analysis
                 - task: Npm@1
@@ -98,15 +109,14 @@ stages:
             # Using SonarCloud for static application security testing
             steps:
                 - task: SonarCloudPrepare@1
-                  displayName: 'Prepare Analysis Configuration'
                   inputs:
                     SonarCloud: 'sonarcloud'
-                    organization: 'guanlinau'
+                    organization: $(sonarOrganization)
                     scannerMode: 'CLI'
                     configMode: 'manual'
-                    cliProjectKey: 'guanlincao'
-                    cliProjectName: 'Angular-Azure-DevOps-code-test-Galen'
-                    cliSources: '.'
+                    cliProjectKey: $(sonarCliProjectKey)
+                    cliProjectName: $(sonarCliProjectName)
+                    cliSources: $(sonarCliSources)
                 - task: SonarCloudAnalyze@1
                   displayName: 'Run Code Analysis'
                   inputs:
