@@ -260,9 +260,10 @@ stages:
                 - script: |
                     SERVICE_IP=$(kubectl get svc $(clusterServiceName) --namespace=$(uatNamespace) -o=jsonpath="{.status.loadBalancer.ingress[0].ip}")
                     cat .kube/config
+                    mkdir galen
                     echo $SERVICE_IP
                     echo $SERVICE_IP > service_ip.txt
-                    eat service_ip.txt
+                    cat service_ip.txt
                     echo "##vso[task.setvariable variable=ServiceIp]$SERVICE_IP"
                   displayName: 'Get Service IP and set as Variable'
 
