@@ -163,7 +163,6 @@ stages:
           vmImage: 'ubuntu-latest'
         steps:
         - checkout: self
-        - checkout: <repo_name>
 
         - task: Docker@2
           inputs:
