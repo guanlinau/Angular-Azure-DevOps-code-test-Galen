@@ -1,18 +1,38 @@
 # trigger:
+<<<<<<< HEAD
 # - master
 # trigger: none
-trigger: 
+trigger:
     - code_vulnerabilities
-    
+
+=======
+#   branches:
+#   - "*"
+trigger: none
+# trigger:
+#     - Augular-DevOps-YAML-pipleine-Galen
+
+# pr:
+#   branches:
+#     include:
+#     - master
+
+pool:
+    vmImage: ubuntu-latest
+
+>>>>>>> master
 resources:
     - repo: self
 
 variables:
-    
+
     CI: true
+<<<<<<< HEAD
     vmImageName: "ubuntu-latest"
     # Azure Container Registry
     # Container registry service connection established during pipeline creation
+=======
+>>>>>>> master
     dockerRegistryServiceConnection: "453a3951-5cbc-4f12-9589-8ad8592ee4dd"
     imageRepository: "angularwebdevops"
     containerRegistry: "angularwebacr.azurecr.io"
@@ -43,7 +63,7 @@ variables:
     sonarCliProjectName: 'Angular-Azure-DevOps-code-test-Galen'
     sonarCliSources: '.'
 
-    
+
 
 
 
@@ -55,7 +75,7 @@ stages:
     #         displayName: "Compile_Test_Code_Analysis"
     #         pool:
     #             vmImage: $(vmImageName)
-            
+
     #         # Our angular project uses Node.js v14.21.3
     #         steps:
     #             - task: NodeTool@0
@@ -67,19 +87,19 @@ stages:
     #               inputs:
     #                   command: "install"
     #               displayName: "Install dependencies"
-                
+
     #             #  Build and compile the Angular project
     #             - task: Npm@1
     #               inputs:
     #                   command: "custom"
     #                   customCommand: "run build"
     #               displayName: "Run build for compiling"
-                
+
     #             # Run unit tests and test coverage
     #             - script: |
     #                   npx ng test --code-coverage --watch=false
     #               displayName: "Run unit tesing and access the code coverage"
-                
+
     #             # Accessing the code coverage
     #             - task: PublishCodeCoverageResults@1
     #               displayName: "Access and Publish code coverage results"
@@ -89,7 +109,7 @@ stages:
     #                   summaryFileLocation: $(codeCoverageSummaryFileLocation)
     #                   reportDirectory: $(codeCoverageReportDirectory)
     #                   failIfCoverageEmpty: false
-                
+
     #             # Accessing the unit testing results report
     #             - task: PublishTestResults@2
     #               displayName: "Access and Publish unit test results"
@@ -111,7 +131,7 @@ stages:
     #         displayName: "Scan_Code_Vulnerabilities_SonarCloud"
     #         pool:
     #             vmImage: $(vmImageName)
-            
+
     #         # Using SonarCloud for static application security testing
     #         steps:
     #             - task: SonarCloudPrepare@1
@@ -132,7 +152,7 @@ stages:
     #               displayName: 'Publish Quality Gate Result'
     #               inputs:
     #                 pollingTimeoutSec: '300'
-    
+
     # This stage is to Build Docker image, versioning artifacts and push images/artifacts into Azure Container Registry
     # This stage will be triggered on master branch only
     - stage: Build
@@ -161,8 +181,8 @@ stages:
                       targetPath: "$(Build.SourcesDirectory)/manifests"
                       artifact: "manifests"
                       publishLocation: "pipeline"
-    
-    #  This stage is to deploy angular web into Uat env for User Acceptance Testing also as a deployed env for e2e 
+
+    #  This stage is to deploy angular web into Uat env for User Acceptance Testing also as a deployed env for e2e
     #  This stage will be triggered on master branch only
     - stage: Deploy_to_UAT
       displayName: Deploy to UAT stage
@@ -226,7 +246,7 @@ stages:
                                       $(imagePullSecret)
                                   containers: |
                                       $(containerRegistry)/$(imageRepository):$(tag)
-    
+
     # This stage is to conduct E2E test in a deployed environment-Uat env
     # This stage will be triggered on master branch and on Uat environment only
     - stage: E2E_Tests_UAT
@@ -242,7 +262,7 @@ stages:
                 - checkout: self
 
                 # This step is qu get the loadbalancer IP in uat environment for e2e test
-                
+
                 - task: AzureCLI@2
                   inputs:
                     azureSubscription: $(azureSubscriptionEndpoint)
@@ -251,10 +271,10 @@ stages:
                     inlineScript: |
                         az aks get-credentials --resource-group $(resourcesGroupName) --name $(aksClusterName)
                   displayName: "Set up aks context"
-                    
+
                 - script: |
                     SERVICE_IP=$(kubectl get svc $(clusterServiceName) --namespace=$(uatNamespace) -o=jsonpath="{.status.loadBalancer.ingress[0].ip}")
-                   
+
                     echo "Setting API_URL for e2e tests..."
                       sed -i "s,http://localhost:4200/,http://$SERVICE_IP/,g" e2e/protractor.conf.js
                   displayName: 'Get AKS Service IP and replace it in protractor.conf.js'
