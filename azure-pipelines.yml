@@ -1,8 +1,8 @@
 # trigger:
 # - master
-trigger: none
-# trigger:
-#     - dast_testing
+# trigger: none
+trigger:
+    - dast_testing
 
 resources:
     - repo: self
@@ -159,128 +159,132 @@ stages:
 
     #  This stage is to deploy angular web into Uat env for User Acceptance Testing also as a deployed env for e2e
     #  This stage will be triggered on master branch only
-    - stage: Deploy_to_UAT
-      displayName: Deploy to UAT stage
-      # condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
-      dependsOn: Build
-      variables:
-          imagePullSecret: $(imageSecret)
-          angular-web-env: $(uatNamespace)
-          replica-number: $(uatReplicasNumber)
-          acr-server: $(containerRegistry)
-          acr-repo-name: $(imageRepository)
-          image-version: $(tag)
-      jobs:
-          - deployment: Deploy_to_UAT
-            displayName: Deploy to UAT envrionment
-            pool:
-                vmImage: $(vmImageName)
-            environment: $(uatEnvironment)
-            strategy:
-                runOnce:
-                    deploy:
-                        steps:
-                            - task: DownloadPipelineArtifact@2
-                              inputs:
-                                  artifactName: "manifests"
-                                  downloadPath: "$(System.ArtifactsDirectory)/manifests"
 
-                            - task: KubernetesManifest@0
-                              displayName: Create imagePullSecret
-                              inputs:
-                                  action: createSecret
-                                  secretName: $(imagePullSecret)
-                                  namespace: $(uatNamespace)
-                                  dockerRegistryEndpoint: $(dockerRegistryServiceConnection)
+    # - stage: Deploy_to_UAT
+    #   displayName: Deploy to UAT stage
+    #   # condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+    #   dependsOn: Build
+    #   variables:
+    #       imagePullSecret: $(imageSecret)
+    #       angular-web-env: $(uatNamespace)
+    #       replica-number: $(uatReplicasNumber)
+    #       acr-server: $(containerRegistry)
+    #       acr-repo-name: $(imageRepository)
+    #       image-version: $(tag)
+    #   jobs:
+    #       - deployment: Deploy_to_UAT
+    #         displayName: Deploy to UAT envrionment
+    #         pool:
+    #             vmImage: $(vmImageName)
+    #         environment: $(uatEnvironment)
+    #         strategy:
+    #             runOnce:
+    #                 deploy:
+    #                     steps:
+    #                         - task: DownloadPipelineArtifact@2
+    #                           inputs:
+    #                               artifactName: "manifests"
+    #                               downloadPath: "$(System.ArtifactsDirectory)/manifests"
 
-                            - task: replacetokens@5
-                              inputs:
-                                  rootDirectory: "$(System.ArtifactsDirectory)/manifests"
-                                  targetFiles: "kubernetes.yaml"
-                                  encoding: "auto"
-                                  tokenPattern: "custom"
-                                  tokenPrefix: "$"
-                                  tokenSuffix: "$"
-                                  writeBOM: true
-                                  actionOnMissing: "warn"
-                                  keepToken: false
-                                  actionOnNoFiles: "continue"
-                                  enableTransforms: false
-                                  enableRecursion: false
-                                  useLegacyPattern: false
-                                  enableTelemetry: true
+    #                         - task: KubernetesManifest@0
+    #                           displayName: Create imagePullSecret
+    #                           inputs:
+    #                               action: createSecret
+    #                               secretName: $(imagePullSecret)
+    #                               namespace: $(uatNamespace)
+    #                               dockerRegistryEndpoint: $(dockerRegistryServiceConnection)
 
-                            - task: KubernetesManifest@0
-                              displayName: Deploy to Kubernetes cluster
-                              inputs:
-                                  action: deploy
-                                  namespace: $(uatNamespace)
-                                  manifests: |
-                                      $(System.ArtifactsDirectory)/manifests/kubernetes.yaml
-                                  imagePullSecrets: |
-                                      $(imagePullSecret)
-                                  containers: |
-                                      $(containerRegistry)/$(imageRepository):$(tag)
+    #                         - task: replacetokens@5
+    #                           inputs:
+    #                               rootDirectory: "$(System.ArtifactsDirectory)/manifests"
+    #                               targetFiles: "kubernetes.yaml"
+    #                               encoding: "auto"
+    #                               tokenPattern: "custom"
+    #                               tokenPrefix: "$"
+    #                               tokenSuffix: "$"
+    #                               writeBOM: true
+    #                               actionOnMissing: "warn"
+    #                               keepToken: false
+    #                               actionOnNoFiles: "continue"
+    #                               enableTransforms: false
+    #                               enableRecursion: false
+    #                               useLegacyPattern: false
+    #                               enableTelemetry: true
+
+    #                         - task: KubernetesManifest@0
+    #                           displayName: Deploy to Kubernetes cluster
+    #                           inputs:
+    #                               action: deploy
+    #                               namespace: $(uatNamespace)
+    #                               manifests: |
+    #                                   $(System.ArtifactsDirectory)/manifests/kubernetes.yaml
+    #                               imagePullSecrets: |
+    #                                   $(imagePullSecret)
+    #                               containers: |
+    #                                   $(containerRegistry)/$(imageRepository):$(tag)
+
 
     # This stage is to conduct E2E test in a deployed environment-Uat env
     # This stage will be triggered on master branch and on Uat environment only
-    - stage: E2E_Tests_UAT
-      displayName: Run e2e tests on UAT
-      # condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
-      dependsOn: Deploy_to_UAT
-      jobs:
-          - job: E2E_Tests
-            displayName: E2E Tests on UAT environment
-            pool:
-                vmImage: $(vmImageName)
-            steps:
-                - checkout: self
 
-                # This step is qu get the loadbalancer IP in uat environment for e2e test
+    # - stage: E2E_Tests_UAT
+    #   displayName: Run e2e tests on UAT
+    #   # condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+    #   dependsOn: Deploy_to_UAT
+    #   jobs:
+    #       - job: E2E_Tests
+    #         displayName: E2E Tests on UAT environment
+    #         pool:
+    #             vmImage: $(vmImageName)
+    #         steps:
+    #             - checkout: self
 
-                - task: AzureCLI@2
-                  inputs:
-                      azureSubscription: $(azureSubscriptionEndpoint)
-                      scriptType: "bash"
-                      scriptLocation: "inlineScript"
-                      inlineScript: |
-                          az aks get-credentials --resource-group $(resourcesGroupName) --name $(aksClusterName)
-                  displayName: "Set up aks context"
+    #             # This step is qu get the loadbalancer IP in uat environment for e2e test
 
-                - script: |
-                      SERVICE_IP=$(kubectl get svc $(clusterServiceName) --namespace=$(uatNamespace) -o=jsonpath="{.status.loadBalancer.ingress[0].ip}")
+    #             - task: AzureCLI@2
+    #               inputs:
+    #                   azureSubscription: $(azureSubscriptionEndpoint)
+    #                   scriptType: "bash"
+    #                   scriptLocation: "inlineScript"
+    #                   inlineScript: |
+    #                       az aks get-credentials --resource-group $(resourcesGroupName) --name $(aksClusterName)
+    #               displayName: "Set up aks context"
 
-                      echo "Setting API_URL for e2e tests..."
-                      sed -i "s,http://localhost:4200/,http://$SERVICE_IP/,g" e2e/protractor.conf.js
-                  displayName: "Get AKS Service IP and replace it in protractor.conf.js"
+    #             - script: |
+    #                   SERVICE_IP=$(kubectl get svc $(clusterServiceName) --namespace=$(uatNamespace) -o=jsonpath="{.status.loadBalancer.ingress[0].ip}")
 
-                - task: NodeTool@0
-                  inputs:
-                      versionSource: "spec"
-                      versionSpec: "14.x"
-                  displayName: "Insall Node.js"
+    #                   echo "Setting API_URL for e2e tests..."
+    #                   sed -i "s,http://localhost:4200/,http://$SERVICE_IP/,g" e2e/protractor.conf.js
+    #               displayName: "Get AKS Service IP and replace it in protractor.conf.js"
 
-                - task: Npm@1
-                  displayName: Install dependencies
-                  inputs:
-                      command: "install"
+    #             - task: NodeTool@0
+    #               inputs:
+    #                   versionSource: "spec"
+    #                   versionSpec: "14.x"
+    #               displayName: "Insall Node.js"
 
-                #  This step is to update the project chrome driver to 117.0.5938.132,
-                #  So it can align with the chrome driver version in ubuntu server of the azure pipeline
-                - script: |
-                      # Ubuntu chrome version
-                        google-chrome --version
-                      node node_modules/.bin/webdriver-manager update --gecko false
-                      node node_modules/.bin/webdriver-manager status
-                  displayName: "update project chrome version"
+    #             - task: Npm@1
+    #               displayName: Install dependencies
+    #               inputs:
+    #                   command: "install"
 
-                - task: Npm@1
-                  displayName: Run e2e tests
-                  inputs:
-                      command: "custom"
-                      customCommand: "run e2e"
-                  continueOnError: true
-                  
+    #             #  This step is to update the project chrome driver to 117.0.5938.132,
+    #             #  So it can align with the chrome driver version in ubuntu server of the azure pipeline
+    #             - script: |
+    #                   # Ubuntu chrome version
+    #                     google-chrome --version
+    #                   node node_modules/.bin/webdriver-manager update --gecko false
+    #                   node node_modules/.bin/webdriver-manager status
+    #               displayName: "update project chrome version"
+
+    #             - task: Npm@1
+    #               displayName: Run e2e tests
+    #               inputs:
+    #                   command: "custom"
+    #                   customCommand: "run e2e"
+    #               continueOnError: true
+
+
     - stage: DAST
           displayName:Dynamic Application Security Testing
           # condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
@@ -292,8 +296,86 @@ stages:
                 vmImage: $(vmImageName)
             steps:
                 - checkout: self
-                
 
+                - task: Docker@2
+                  inputs:
+                    containerRegistry: 'angularwebacr-1506'
+                    # containerRegistry: $(containerRegistry)
+                    command: 'login'
+                - script: |
+                      docker run -d -p 80:80 angular_dast $(containerRegistry)/$(imageRepository):$(tag)
+                      docker ps -a
+                  displayName: "Run a angular docker"
                 
+                - task: owaspzap@1
+                  inputs:
+                    threshold: '50'
+                    port: '80'
+                  displayName: 'Owasp DAST Scan'
+                
+                - script: |
+                      sudo npm install -g handlebars-cmd
+                      sudo cat <<EOF > owaspzap/nunit-template.hbs
+                      {{#each site}}
+                      <test-run
+                          id="2"
+                          name="Owasp test"
+                          start-time="{{../[@generated]}}"  >
+                          <test-suite
+                              id="{{@index}}"
+                              type="Assembly"
+                              name="{{[@name]}}"
+                              result="Failed"
+                              failed="{{alerts.length}}">
+                              <attachments>
+                                  <attachment>
+                                      <filePath>owaspzap/report.html</filePath>
+                                  </attachment>
+                              </attachments>
+                          {{#each alerts}}<test-case
+                              id="{{@index}}"
+                              name="{{alert}}"
+                              result="Failed"
+                              fullname="{{alert}}"
+                              time="1">
+                                  <failure>
+                                          <message>
+                                          <![CDATA[{{{desc}}}]]>
+                                      </message>
+                                      <stack-trace>
+                                          <![CDATA[
+                      Solution:
+                      {{{solution}}}
+                      Reference:
+                      {{{reference}}}
+                      instances:{{#each instances}}
+                      * {{uri}}
+                          - {{method}}
+                          {{#if evidence}}- {{{evidence}}}{{/if}}
+                                          {{/each}}]]>
+                                      </stack-trace>
+                                  </failure>
+                          </test-case>
+                          {{/each}}
+                          </test-suite>
+                      </test-run>
+                      {{/each}}
+                      EOF
+                  displayName: 'Owasp Nunit Template'
+                  condition: always()
+                
+                - script: ' handlebars owaspzap/report.json < owaspzap/nunit-template.hbs > owaspzap/test-results.xml'
+                  displayName: 'generate nunit type file'
+                  condition: always()
+                
+                - task: PublishTestResults@2
+                  displayName: 'Publish DAST Test Results'
+                  inputs:
+                    testResultsFormat: 'NUnit'
+                    testResultsFiles: 'owaspzap/test-results.xml'
+                    testRunTitle: 'DAST_Owasp'
+                  condition: always()
+
+                    
 
 
