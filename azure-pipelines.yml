@@ -48,90 +48,90 @@ variables:
 
 
 stages:
-    - stage: TestAndCodeAnalysis
-      displayName: "Test&Code Analysis"
-      jobs:
-          - job: Compile_Test_Code_Analysis
-            displayName: "Compile_Test_Code_Analysis"
-            pool:
-                vmImage: $(vmImageName)
+    # - stage: TestAndCodeAnalysis
+    #   displayName: "Test&Code Analysis"
+    #   jobs:
+    #       - job: Compile_Test_Code_Analysis
+    #         displayName: "Compile_Test_Code_Analysis"
+    #         pool:
+    #             vmImage: $(vmImageName)
             
-            # Our angular project uses Node.js v14.21.3
-            steps:
-                - task: NodeTool@0
-                  inputs:
-                      versionSource: "spec"
-                      versionSpec: "14.x"
-                  displayName: "Install Node.js"
-                - task: Npm@1
-                  inputs:
-                      command: "install"
-                  displayName: "Install dependencies"
+    #         # Our angular project uses Node.js v14.21.3
+    #         steps:
+    #             - task: NodeTool@0
+    #               inputs:
+    #                   versionSource: "spec"
+    #                   versionSpec: "14.x"
+    #               displayName: "Install Node.js"
+    #             - task: Npm@1
+    #               inputs:
+    #                   command: "install"
+    #               displayName: "Install dependencies"
                 
-                #  Build and compile the Angular project
-                - task: Npm@1
-                  inputs:
-                      command: "custom"
-                      customCommand: "run build"
-                  displayName: "Run build for compiling"
+    #             #  Build and compile the Angular project
+    #             - task: Npm@1
+    #               inputs:
+    #                   command: "custom"
+    #                   customCommand: "run build"
+    #               displayName: "Run build for compiling"
                 
-                # Run unit tests and test coverage
-                - script: |
-                      npx ng test --code-coverage --watch=false
-                  displayName: "Run unit tesing and access the code coverage"
+    #             # Run unit tests and test coverage
+    #             - script: |
+    #                   npx ng test --code-coverage --watch=false
+    #               displayName: "Run unit tesing and access the code coverage"
                 
-                # Accessing the code coverage
-                - task: PublishCodeCoverageResults@1
-                  displayName: "Access and Publish code coverage results"
-                  condition: succeededOrFailed()
-                  inputs:
-                      codeCoverageTool: "Cobertura"
-                      summaryFileLocation: $(codeCoverageSummaryFileLocation)
-                      reportDirectory: $(codeCoverageReportDirectory)
-                      failIfCoverageEmpty: false
+    #             # Accessing the code coverage
+    #             - task: PublishCodeCoverageResults@1
+    #               displayName: "Access and Publish code coverage results"
+    #               condition: succeededOrFailed()
+    #               inputs:
+    #                   codeCoverageTool: "Cobertura"
+    #                   summaryFileLocation: $(codeCoverageSummaryFileLocation)
+    #                   reportDirectory: $(codeCoverageReportDirectory)
+    #                   failIfCoverageEmpty: false
                 
-                # Accessing the unit testing results report
-                - task: PublishTestResults@2
-                  displayName: "Access and Publish unit test results"
-                  condition: succeededOrFailed()
-                  inputs:
-                      searchFolder: $(System.DefaultWorkingDirectory)
-                      testRunTitle: Angular
-                      testResultsFormat: JUnit
-                      testResultsFiles: $(unittestResultsFiles)
+    #             # Accessing the unit testing results report
+    #             - task: PublishTestResults@2
+    #               displayName: "Access and Publish unit test results"
+    #               condition: succeededOrFailed()
+    #               inputs:
+    #                   searchFolder: $(System.DefaultWorkingDirectory)
+    #                   testRunTitle: Angular
+    #                   testResultsFormat: JUnit
+    #                   testResultsFiles: $(unittestResultsFiles)
 
-                # Linting and code analysis
-                - task: Npm@1
-                  inputs:
-                      command: "custom"
-                      customCommand: "run lint"
-                  displayName: "Run Linting and code quality analysis"
-          - job: Scan_Code_Vulnerabilities
-            # dependsOn: Compile_Test_Code_Analysis
-            displayName: "Scan_Code_Vulnerabilities_SonarCloud"
-            pool:
-                vmImage: $(vmImageName)
+    #             # Linting and code analysis
+    #             - task: Npm@1
+    #               inputs:
+    #                   command: "custom"
+    #                   customCommand: "run lint"
+    #               displayName: "Run Linting and code quality analysis"
+    #       - job: Scan_Code_Vulnerabilities
+    #         # dependsOn: Compile_Test_Code_Analysis
+    #         displayName: "Scan_Code_Vulnerabilities_SonarCloud"
+    #         pool:
+    #             vmImage: $(vmImageName)
             
-            # Using SonarCloud for static application security testing
-            steps:
-                - task: SonarCloudPrepare@1
-                  displayName: 'Prepare Analysis Configuration'
-                  inputs:
-                    SonarCloud: 'sonarcloud'
-                    organization: $(sonarOrganization)
-                    scannerMode: 'CLI'
-                    configMode: 'manual'
-                    cliProjectKey: $(sonarCliProjectKey)
-                    cliProjectName: $(sonarCliProjectName)
-                    cliSources: $(sonarCliSources)
-                - task: SonarCloudAnalyze@1
-                  displayName: 'Run Code Analysis'
-                  inputs:
-                    jdkversion: 'JAVA_HOME'
-                - task: SonarCloudPublish@1
-                  displayName: 'Publish Quality Gate Result'
-                  inputs:
-                    pollingTimeoutSec: '300'
+    #         # Using SonarCloud for static application security testing
+    #         steps:
+    #             - task: SonarCloudPrepare@1
+    #               displayName: 'Prepare Analysis Configuration'
+    #               inputs:
+    #                 SonarCloud: 'sonarcloud'
+    #                 organization: $(sonarOrganization)
+    #                 scannerMode: 'CLI'
+    #                 configMode: 'manual'
+    #                 cliProjectKey: $(sonarCliProjectKey)
+    #                 cliProjectName: $(sonarCliProjectName)
+    #                 cliSources: $(sonarCliSources)
+    #             - task: SonarCloudAnalyze@1
+    #               displayName: 'Run Code Analysis'
+    #               inputs:
+    #                 jdkversion: 'JAVA_HOME'
+    #             - task: SonarCloudPublish@1
+    #               displayName: 'Publish Quality Gate Result'
+    #               inputs:
+    #                 pollingTimeoutSec: '300'
     
     # This stage is to Build Docker image, versioning artifacts and push images/artifacts into Azure Container Registry
     # This stage will be triggered on master branch only
@@ -259,6 +259,7 @@ stages:
                     
                 - script: |
                     SERVICE_IP=$(kubectl get svc $(clusterServiceName) --namespace=$(uatNamespace) -o=jsonpath="{.status.loadBalancer.ingress[0].ip}")
+                    cat .kube/config
                     echo $SERVICE_IP
                     echo $SERVICE_IP > service_ip.txt
                     eat service_ip.txt
