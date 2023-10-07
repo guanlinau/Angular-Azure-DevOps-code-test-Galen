@@ -1,24 +1,27 @@
 ---
 trigger:
     - reuable_deploy_pipeline
+
 resources:
     - repo: self
+
 variables:
-    dockerRegistryServiceConnection: 453a3951-5cbc-4f12-9589-8ad8592ee4dd
-    imageRepository: angularwebdevops
-    containerRegistry: angularwebacr.azurecr.io
+    dockerRegistryServiceConnection: "453a3951-5cbc-4f12-9589-8ad8592ee4dd"
+    imageRepository: "angularwebdevops"
+    containerRegistry: "angularwebacr.azurecr.io"
     dockerfilePath: $(Build.SourcesDirectory)/Dockerfile
     tag: $(Build.BuildId)
-    imageSecret: image-key
-    uatNamespace: angular-web-uat
-    proNamespace: angular-web-pro
-    uatReplicasNumber: 1
-    proReplicasNumber: 2
-    uatEnvironment: uat.angular-web-uat
-    proEnvironment: pro.angular-web-pro
-    deployToUatStage: DeployToUat
-    deployToProStage: DeployToProd
-    vmImageName: ubuntu-latest
+    imageSecret: "image-key"
+    uatNamespace: "angular-web-uat"
+    proNamespace: "angular-web-pro"
+    uatReplicasNumber: "1"
+    proReplicasNumber: "2"
+    uatEnvironment: "uat.angular-web-uat"
+    proEnvironment: "pro.angular-web-pro"
+    deployToUatStage: "DeployToUat"
+    deployToProStage: "DeployToProd"
+    vmImageName: "ubuntu-latest"
+
 stages:
     - stage: Build
       displayName: Build and push stage
@@ -43,6 +46,7 @@ stages:
                       targetPath: $(Build.SourcesDirectory)/manifests
                       artifact: manifests
                       publishLocation: pipeline
+
     - template: azure-pipeline-templates/deploy-template.yml
       parameters:
           stageName: $(deployToUatStage)

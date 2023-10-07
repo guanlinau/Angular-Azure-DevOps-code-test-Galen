@@ -10,8 +10,8 @@ parameters:
       type: string
       default: ""
     - name: replica_number
-      type: number
-      default: 1
+      type: string
+      default: "1"
     - name: acr_server
       type: string
       default: ""
