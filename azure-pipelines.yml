@@ -286,8 +286,8 @@ stages:
 
 
     - stage: DAST
-          displayName:Dynamic Application Security Testing
-          # condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+      displayName: Dynamic Application Security Testing
+      # condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
       dependsOn: Build
       jobs:
           - job: DAST
