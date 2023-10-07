@@ -1,3 +1,4 @@
+---
 parameters:
     - name: stageName
       type: string
@@ -9,8 +10,8 @@ parameters:
       type: string
       default: ""
     - name: replica_number
-      type: string
-      default: ""
+      type: number
+      default: 1
     - name: acr_server
       type: string
       default: ""
@@ -29,11 +30,9 @@ parameters:
     - name: dockerRegistryEndpoint
       type: string
       default: ""
-
 stages:
-    - stage: ${{parameters.stageName}}
-      displayName: ${{parameters.stageName}}
-      #   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+    - stage: ${{ parameters.stageName }}
+      displayName: ${{ parameters.stageName }}
       dependsOn: Build
       variables:
           imagePullSecret: ${{parameters.imagePullSecret}}
@@ -54,8 +53,8 @@ stages:
                         steps:
                             - task: DownloadPipelineArtifact@2
                               inputs:
-                                  artifactName: "manifests"
-                                  downloadPath: "$(System.ArtifactsDirectory)/manifests"
+                                  artifactName: manifests
+                                  downloadPath: $(System.ArtifactsDirectory)/manifests
                             - task: KubernetesManifest@0
                               displayName: Create imagePullSecret
                               inputs:
@@ -66,16 +65,16 @@ stages:
                             - task: replacetokens@5
                               displayName: Replace Variables
                               inputs:
-                                  rootDirectory: "$(System.ArtifactsDirectory)/manifests"
-                                  targetFiles: "kubernetes.yaml"
-                                  encoding: "auto"
-                                  tokenPattern: "custom"
-                                  tokenPrefix: "$"
-                                  tokenSuffix: "$"
+                                  rootDirectory: $(System.ArtifactsDirectory)/manifests
+                                  targetFiles: kubernetes.yaml
+                                  encoding: auto
+                                  tokenPattern: custom
+                                  tokenPrefix: $
+                                  tokenSuffix: $
                                   writeBOM: true
-                                  actionOnMissing: "warn"
+                                  actionOnMissing: warn
                                   keepToken: false
-                                  actionOnNoFiles: "continue"
+                                  actionOnNoFiles: continue
                                   enableTransforms: false
                                   enableRecursion: false
                                   useLegacyPattern: false
