@@ -1,8 +1,8 @@
 # trigger:
 # - master
-# trigger: none
-trigger:
-    - code_vulnerabilities
+trigger: none
+# trigger:
+#     - dast_testing
 
 resources:
     - repo: self
@@ -251,7 +251,7 @@ stages:
                       SERVICE_IP=$(kubectl get svc $(clusterServiceName) --namespace=$(uatNamespace) -o=jsonpath="{.status.loadBalancer.ingress[0].ip}")
 
                       echo "Setting API_URL for e2e tests..."
-                        sed -i "s,http://localhost:4200/,http://$SERVICE_IP/,g" e2e/protractor.conf.js
+                      sed -i "s,http://localhost:4200/,http://$SERVICE_IP/,g" e2e/protractor.conf.js
                   displayName: "Get AKS Service IP and replace it in protractor.conf.js"
 
                 - task: NodeTool@0
@@ -280,3 +280,20 @@ stages:
                       command: "custom"
                       customCommand: "run e2e"
                   continueOnError: true
+                  
+    - stage: DAST
+          displayName:Dynamic Application Security Testing
+          # condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+      dependsOn: Build
+      jobs:
+          - job: DAST
+            displayName: Dynamic Application Security Testing
+            pool:
+                vmImage: $(vmImageName)
+            steps:
+                - checkout: self
+                
+
+                
+
+
