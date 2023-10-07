@@ -370,19 +370,22 @@ stages:
                   displayName: 'generate nunit type file'
                   condition: always()
 
-                - script: ls -alR
+                - script: |
+                    ls -alR
+                    sudo chmod 777 owaspzap/test-results.xml
+                    cat $(System.DefaultWorkingDirectory)/owaspzap/test-results.xml
+                     
                   displayName: 'List all files'
 
                 - task: PublishTestResults@2
                   displayName: 'Publish DAST Test Results'
                   inputs:
                     searchFolder: $(System.DefaultWorkingDirectory)
-                    testResultsFormat: 'NUnit'
+                    testResultsFormat: 'JUnit'
                     testResultsFiles: 'owaspzap/test-results.xml'
                     testRunTitle: 'DAST_Owasp'
                   condition: always()
-                - script: ls -alR
-                  displayName: 'List all files'
+
 
 
                     
