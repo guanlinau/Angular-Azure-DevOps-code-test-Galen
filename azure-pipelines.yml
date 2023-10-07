@@ -1,8 +1,8 @@
 # trigger:
 # - master
-# trigger: none
-trigger: 
-    - code_vulnerabilities
+trigger: none
+# trigger: 
+#     - code_vulnerabilities
     
 resources:
     - repo: self
@@ -66,10 +66,7 @@ stages:
                 - script: |
                       npx ng test --code-coverage --watch=false
                   displayName: "Run unit tesing and access the code coverage"
-                - script: |
-                      ls -al
-                  
-
+                
                 # Accessing the code coverage
                 - task: PublishCodeCoverageResults@1
                   displayName: "Access and Publish code coverage results"
@@ -79,8 +76,7 @@ stages:
                       summaryFileLocation: "coverage/angular11-testing-examples/cobertura-coverage.xml"
                       reportDirectory: "coverage/angular11-testing-examples/"
                       failIfCoverageEmpty: false
-                - script: |
-                      ls -al
+                
                 # Accessing the unit testing results report
                 - task: PublishTestResults@2
                   displayName: "Access and Publish unit test results"
@@ -91,7 +87,7 @@ stages:
                       testResultsFormat: JUnit
                       testResultsFiles: "src/test-results/Chrome_Headless_117.0.5938.132_(Linux_x86_64)/TESTS-results.xml"
                 - script: |
-                      ls -al src
+                      ls -al src/results
 
 
                 # Linting and code analysis
