@@ -1,8 +1,8 @@
 # trigger:
 # - master
-trigger: none
-# trigger: 
-#     - code_vulnerabilities
+# trigger: none
+trigger: 
+    - code_vulnerabilities
     
 resources:
     - repo: self
@@ -137,7 +137,7 @@ stages:
     # This stage will be triggered on master branch only
     - stage: Build
       displayName: Build and push Docker image stage
-      condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+      # condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
       jobs:
           - job: Build
             displayName: Build
@@ -166,7 +166,7 @@ stages:
     #  This stage will be triggered on master branch only
     - stage: Deploy_to_UAT
       displayName: Deploy to UAT stage
-      condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+      # condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
       dependsOn: Build
       variables:
           imagePullSecret: $(imageSecret)
@@ -231,7 +231,7 @@ stages:
     # This stage will be triggered on master branch and on Uat environment only
     - stage: E2E_Tests_UAT
       displayName: Run e2e tests on UAT
-      condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+      # condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
       dependsOn: Deploy_to_UAT
       jobs:
           - job: E2E_Tests
