@@ -31,10 +31,10 @@ variables:
 
 
 stages:
-    - stage: "Test_Code_Analysis"
+    - stage: TestAndCodeAnalysis
       displayName: "Test&Code Analysis"
       jobs:
-          - job: "Compile_Test_Code_Analysis"
+          - job: Compile_Test_Code_Analysis
             displayName: "Preparetion and test"
             pool:
                 vmImage: $(vmImageName)
@@ -89,8 +89,34 @@ stages:
                       command: "custom"
                       customCommand: "run lint"
                   displayName: "Run Linting and code quality analysis"
-
+          - job: Scan_Code_Vulnerabilities
+            dependsOn: Compile_Test_Code_Analysis
+            displayName: "Scan_Code_Vulnerabilities_SonarCloud"
+            pool:
+                vmImage: $(vmImageName)
+            
+            # Using SonarCloud for static application security testing
+            steps:
+                - task: SonarCloudPrepare@1
+                  displayName: 'Prepare Analysis Configuration'
+                  inputs:
+                    SonarCloud: 'sonarcloud'
+                    organization: 'guanlinau'
+                    scannerMode: 'CLI'
+                    configMode: 'manual'
+                    cliProjectKey: 'angular_devops_test_guanlincao'
+                    cliProjectName: 'angular_devops_test'
+                    cliSources: '.'
+                - task: SonarCloudAnalyze@1
+                  displayName: 'Run Code Analysis'
+                  inputs:
+                    jdkversion: 'JAVA_HOME'
+                - task: SonarCloudPublish@1
+                  inputs:
+                    pollingTimeoutSec: '300'
+    
     # This stage is to Build Docker image, versioning artifacts and push images/artifacts into Azure Container Registry
+    # This stage will be triggered on master branch only
     - stage: Build
       displayName: Build and push Docker image stage
       #   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
@@ -119,6 +145,7 @@ stages:
                       publishLocation: "pipeline"
     
     #  This stage is to deploy angular web into Uat env for User Acceptance Testing also as a deployed env for e2e 
+    #  This stage will be triggered on master branch only
     - stage: Deploy_to_UAT
       displayName: Deploy to UAT stage
       #   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
@@ -183,6 +210,7 @@ stages:
                                       $(containerRegistry)/$(imageRepository):$(tag)
     
     # This stage is to conduct E2E test in a deployed environment-Uat env
+    # This stage will be triggered on master branch and on Uat environment only
     - stage: E2E_Tests_UAT
       displayName: Run e2e tests on UAT
       #   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
