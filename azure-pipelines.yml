@@ -369,14 +369,21 @@ stages:
                 - script: ' handlebars owaspzap/report.json < owaspzap/nunit-template.hbs > owaspzap/test-results.xml'
                   displayName: 'generate nunit type file'
                   condition: always()
-                
+
+                - script: ls -alR
+                  displayName: 'List all files'
+
                 - task: PublishTestResults@2
                   displayName: 'Publish DAST Test Results'
                   inputs:
+                    searchFolder: $(System.DefaultWorkingDirectory)
                     testResultsFormat: 'NUnit'
                     testResultsFiles: 'owaspzap/test-results.xml'
                     testRunTitle: 'DAST_Owasp'
                   condition: always()
+                - script: ls -alR
+                  displayName: 'List all files'
+
 
                     
 
