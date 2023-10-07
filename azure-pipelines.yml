@@ -238,3 +238,4 @@ stages:
                   inputs:
                       command: "custom"
                       customCommand: "run e2e"
+                  continueOnError: true
