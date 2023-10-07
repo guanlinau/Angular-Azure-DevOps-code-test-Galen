@@ -1,11 +1,8 @@
 # trigger:
 # - master
-# trigger: none
-trigger:
-    - code_vulnerabilities
-
-pool:
-    vmImage: ubuntu-latest
+trigger: none
+# trigger:
+#     - code_vulnerabilities
 
 resources:
     - repo: self
@@ -39,6 +36,8 @@ stages:
       jobs:
           - job: "Compile_Test_Code_Analysis"
             displayName: "Preparetion and test"
+            pool:
+                vmImage: $(vmImageName)
             
             # Our angular project uses Node.js v14.21.3
             steps:
