@@ -2,7 +2,7 @@
 # - master
 # trigger: none
 trigger:
-    - Augular-DevOps-YAML-pipleine-Galen
+    - code_vulnerabilities
 
 pool:
     vmImage: ubuntu-latest
