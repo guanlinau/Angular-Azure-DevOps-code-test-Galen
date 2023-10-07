@@ -1,9 +1,9 @@
 # trigger:
 # - master
 # trigger: none
-# trigger:
+trigger: 
     - code_vulnerabilities
-
+    
 resources:
     - repo: self
 
