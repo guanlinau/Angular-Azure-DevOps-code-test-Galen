@@ -104,8 +104,8 @@ stages:
                     organization: 'guanlinau'
                     scannerMode: 'CLI'
                     configMode: 'manual'
-                    cliProjectKey: 'angular_devops_test_guanlincao'
-                    cliProjectName: 'angular_devops_test'
+                    cliProjectKey: 'guanlincao'
+                    cliProjectName: 'Angular-Azure-DevOps-code-test-Galen'
                     cliSources: '.'
                 - task: SonarCloudAnalyze@1
                   displayName: 'Run Code Analysis'
