@@ -18,7 +18,7 @@ variables:
     proReplicasNumber: "2"
     uatEnvironment: "uat.angular-web-uat"
     proEnvironment: "pro.angular-web-pro"
-    deployName: "uat"
+    galen: "uat"
     vmImageName: "ubuntu-latest"
 
 stages:
@@ -48,7 +48,7 @@ stages:
 
     - template: azure-pipeline-templates/deploy-template.yml
       parameters:
-          deployName: $(deployName)
+          deployName: $(galen)
           imagePullSecret: $(imageSecret)
           angular_web_env: $(uatNamespace)
           replica_number: $(uatReplicasNumber)

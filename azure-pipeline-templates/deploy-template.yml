@@ -1,6 +1,6 @@
 ---
 parameters:
-    - name: deployName
+    - name: galen
       type: string
       default: ""
     - name: imagePullSecret
@@ -32,7 +32,7 @@ parameters:
       default: ""
 stages:
     - stage: Deploy
-      displayName: Deploy to ${{parameters.deployName}}
+      displayName: Deploy to ${{parameters.galen}}
       dependsOn: Build
       variables:
           imagePullSecret: ${{parameters.imagePullSecret}}
@@ -42,8 +42,8 @@ stages:
           acr_repo_name: ${{parameters.acr_repo_name}}
           image_version: ${{parameters.image_version}}
       jobs:
-          - deployment: ${{parameters.deployName}}
-            displayName: Deploy to ${{parameters.deployName}}
+          - deployment: ${{parameters.galen}}
+            displayName: Deploy to ${{parameters.galen}}
             pool:
                 vmImage: ${{parameters.vmImage}}
             environment: ${{parameters.environment}}
