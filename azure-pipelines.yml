@@ -1,8 +1,11 @@
-# trigger:
-# - master
-# trigger: none
+---
 trigger:
-    - dast_testing
+    branches:
+        include:
+            - "*"
+
+pr:
+    - main
 
 resources:
     - repo: self
@@ -11,13 +14,9 @@ variables:
     CI: true
     vmImageName: "ubuntu-latest"
     # Azure Container Registry
-    # Container registry service connection established during pipeline creation
-    dockerRegistryServiceConnection: "453a3951-5cbc-4f12-9589-8ad8592ee4dd"
-    imageRepository: "angularwebdevops"
-    containerRegistry: "angularwebacr.azurecr.io"
+
     dockerfilePath: "$(Build.SourcesDirectory)/Dockerfile"
     tag: "$(Build.BuildId)"
-
     # Azure kubernetes service
     imageSecret: "image-key"
     uatNamespace: "angular-web-uat"
@@ -26,10 +25,6 @@ variables:
     proReplicasNumber: 2
     uatEnvironment: "uat.angular-web-uat"
     proEnvironment: "pro.angular-web-pro"
-    azureSubscriptionEndpoint: "e2e_azureSubscriptionEndpoint"
-    resourcesGroupName: "angular-web-sg"
-    aksClusterName: "angular-web-aks"
-    clusterServiceName: "angular-web-service"
 
     # unit testing
     unittestResultsFiles: "src/test-results/Chrome_Headless_117.0.5938.*_(Linux_x86_64)/TESTS-*.xml"
@@ -38,16 +33,25 @@ variables:
 
     # SonarCloud
     sonarOrganization: "guanlinau"
-    sonarCliProjectKey: "guanlinau_Angular-Azure-DevOps-code-test-Galen"
     sonarCliProjectName: "Angular-Azure-DevOps-code-test-Galen"
     sonarCliSources: "."
+    pollingTimeoutSec: "300"
+    jdkversion: "JAVA_HOME"
 
-    # DAST
-    DAST_dockerServiceConnection: 'angularwebacr-1506'
+    # The value of those variables below were stored in Variable provided by Azure pipeline for security purpose.
+    #Container registry service connection established during pipeline creation
+    dockerRegistryServiceConnection: "453a3951-5cbc-4f12-9589-8ad8592ee4dd"
+    DAST_RegistryServiceConnection: "angularwebacr-1506"
+    imageRepository: "angularwebdevops"
+    containerRegistry: "angularwebacr.azurecr.io"
+    azureSubscriptionEndpoint: "e2e_azureSubscriptionEndpoint"
+    resourcesGroupName: "angular-web-sg"
+    aksClusterName: "angular-web-aks"
+    clusterServiceName: "angular-web-service"
+    sonarCliProjectKey: "guanlinau_Angular-Azure-DevOps-code-test-Galen"
 
 stages:
-    # This stage is for code compile, Unit testing, testing coverage, Linting and
-    # Static application security testing
+    # Stage is for code compile, Unit testing, testing coverage, Linting
     - stage: TestAndCodeAnalysis
       displayName: "Test&Code Analysis"
       jobs:
@@ -107,39 +111,45 @@ stages:
                       customCommand: "run lint"
                   displayName: "Run Linting and code quality analysis"
 
+    # Stage- Static Application Security Test
+    - stage: SAST
+      displayName: SAST
+      dependsOn: TestAndCodeAnalysis
+      condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+      jobs:
           # This job is for Static application security testing
           - job: Scan_Code_Vulnerabilities
             # dependsOn: Compile_Test_Code_Analysis
-            displayName: "SAST"
+            displayName: "Scan_Code_Vulnerabilities"
             pool:
                 vmImage: $(vmImageName)
 
             # Using SonarCloud for static application security testing
             steps:
                 - task: SonarCloudPrepare@1
-                  displayName: 'Prepare Analysis Configuration'
+                  displayName: "Prepare Analysis Configuration"
                   inputs:
-                    SonarCloud: 'sonarcloud'
-                    organization: $(sonarOrganization)
-                    scannerMode: 'CLI'
-                    configMode: 'manual'
-                    cliProjectKey: $(sonarCliProjectKey)
-                    cliProjectName: $(sonarCliProjectName)
-                    cliSources: $(sonarCliSources)
+                      SonarCloud: "sonarcloud"
+                      organization: $(sonarOrganization)
+                      scannerMode: "CLI"
+                      configMode: "manual"
+                      cliProjectKey: $(sonarCliProjectKey)
+                      cliProjectName: $(sonarCliProjectName)
+                      cliSources: $(sonarCliSources)
                 - task: SonarCloudAnalyze@1
-                  displayName: 'Run Code Analysis'
+                  displayName: "Run Code Analysis"
                   inputs:
-                    jdkversion: 'JAVA_HOME'
+                      jdkversion: $(jdkversion)
                 - task: SonarCloudPublish@1
-                  displayName: 'Publish Quality Gate Result'
+                  displayName: "Publish Quality Gate Result"
                   inputs:
-                    pollingTimeoutSec: '300'
+                      pollingTimeoutSec: $(pollingTimeoutSec)
 
-    # This stage is to Build Docker image, versioning artifacts and push images/artifacts into Azure Container Registry
-    # This stage will be triggered on master branch only
+    # Stage-Build Docker image, versioning images/artifacts and push images/artifacts into ACR, will be triggered on Master branch only
     - stage: Build
       displayName: Build and push Docker image
-      # condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+      dependsOn: SAST
+      condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
       jobs:
           - job: Build
             displayName: Build and push Docker image stage
@@ -156,7 +166,7 @@ stages:
                       containerRegistry: $(dockerRegistryServiceConnection)
                       tags: |
                           $(tag)
-
+                # This step is to publish all the kubernetes configuration files in manifests fold to our pipeline for creating pull image secret in deploy stage
                 - task: PublishPipelineArtifact@1
                   displayName: Publish the manifests folder to pipeline
                   inputs:
@@ -164,57 +174,58 @@ stages:
                       artifact: "manifests"
                       publishLocation: "pipeline"
 
-    # This stage is for Dynamic application security testing  
+    # This stage is for Dynamic application security testing
     - stage: DAST
       displayName: DAST
-      # condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
-      dependsOn: Build 
+      condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+      dependsOn: Build
       jobs:
-      - job: DAST
-        displayName: Dynamic Application Security Test
-        pool: 
-          vmImage: 'ubuntu-latest'
-        steps:
-        - checkout: self
+          - job: DAST
+            displayName: Dynamic Application Security Test
+            pool:
+                vmImage: "ubuntu-latest"
+            steps:
+                - checkout: self
 
-        - task: Docker@2
-          inputs:
-            containerRegistry: $(DAST_dockerServiceConnection)
-            command: 'login'
-          displayName: Login to ACR
+                - task: Docker@2
+                  inputs:
+                      containerRegistry: $(DAST_RegistryServiceConnection)
+                      command: "login"
+                  displayName: Login to ACR
 
-        - script: |
-              docker run -d -p 80:8080 --name angular_dast $(containerRegistry)/$(imageRepository):$(tag)
-              docker ps -a
-          displayName: "Run a angular docker"
+                - script: |
+                      docker run -d -p 80:8080 --name angular_dast $(containerRegistry)/$(imageRepository):$(tag)
+                  displayName: "Run a angular docker"
 
-        - bash: |
-            chmod -R 777  ./
-            docker run --rm -v $(pwd):/zap/wrk/:rw -t owasp/zap2docker-stable zap-full-scan.py -t http://$(ip -f inet -o addr show docker0 | awk '{print $4}' | cut -d '/' -f 1):80 -x xml_report.xml
-            true
-          displayName: 'Owasp Container Scan'
+                - bash: |
+                      chmod -R 777  ./
+                      docker run --rm -v $(pwd):/zap/wrk/:rw -t owasp/zap2docker-stable zap-full-scan.py -t http://$(ip -f inet -o addr show docker0 | awk '{print $4}' | cut -d '/' -f 1):80 -x xml_report.xml
+                      true
+                  displayName: "Owasp Container Scan"
 
-        - powershell: |
-            $XslPath = "$(System.DefaultWorkingDirectory)/xml_to_nunit.xslt" 
-            $XmlInputPath = "xml_report.xml"
-            $XmlOutputPath = "converted_report.xml"
-            $XslTransform = New-Object System.Xml.Xsl.XslCompiledTransform
-            $XslTransform.Load($XslPath)
-            $XslTransform.Transform($XmlInputPath, $XmlOutputPath)
-          displayName: 'Owasp Generate Nunit type file'
-        - task: PublishTestResults@2
-          displayName: 'Publish Test Results'
-          inputs:
-            testRunTitle: DAST_code_scan_report
-            testResultsFormat: 'NUnit'
-            testResultsFiles: 'converted_report.xml'
+                - powershell: |
+                      $XslPath = "$(System.DefaultWorkingDirectory)/xml_to_nunit.xslt"
+                      $XmlInputPath = "xml_report.xml"
+                      $XmlOutputPath = "converted_report.xml"
+                      $XslTransform = New-Object System.Xml.Xsl.XslCompiledTransform
+                      $XslTransform.Load($XslPath)
+                      $XslTransform.Transform($XmlInputPath, $XmlOutputPath)
+                  displayName: "Owasp Generate Nunit type file"
 
-    #  This stage is to deploy angular web into Uat env for User Acceptance Testing also as a deployed env for e2e
-    #  This stage will be triggered on master branch only
+                - task: PublishTestResults@2
+                  displayName: "Publish Test Results"
+                  inputs:
+                      testRunTitle: DAST_code_scan_report
+                      testResultsFormat: "NUnit"
+                      testResultsFiles: "converted_report.xml"
+
+    # Stage-Deploy into Uat environment for User Acceptance Testing and E2E, triggered on Master branch only
     - stage: Deploy_to_UAT
       displayName: Deploy to UAT stage
-      # condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
-      dependsOn: Build
+      condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+      dependsOn:
+          - Build
+          - DAST
       variables:
           imagePullSecret: $(imageSecret)
           angular-web-env: $(uatNamespace)
@@ -274,12 +285,74 @@ stages:
                                   containers: |
                                       $(containerRegistry)/$(imageRepository):$(tag)
 
+    # Stage-Deploy into Prod environment for end-users, triggered on Master branch and manually approve
+    - stage: Deploy_to_Prod
+      displayName: Deploy to Prod stage
+      condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+      dependsOn: Build
+      variables:
+          imagePullSecret: $(imageSecret)
+          angular-web-env: $(proNamespace)
+          replica-number: $(proReplicasNumber)
+          acr-server: $(containerRegistry)
+          acr-repo-name: $(imageRepository)
+          image-version: $(tag)
+      jobs:
+          - deployment: Deploy_to_Prod
+            displayName: Deploy to prod envrionment
+            pool:
+                vmImage: $(vmImageName)
+            environment: $(proEnvironment)
+            strategy:
+                runOnce:
+                    deploy:
+                        steps:
+                            - task: DownloadPipelineArtifact@2
+                              inputs:
+                                  artifactName: "manifests"
+                                  downloadPath: "$(System.ArtifactsDirectory)/manifests"
 
-    # This stage is to conduct E2E test in a deployed environment-Uat env
-    # This stage will be triggered on master branch and on Uat environment only
+                            - task: KubernetesManifest@0
+                              displayName: Create imagePullSecret
+                              inputs:
+                                  action: createSecret
+                                  secretName: $(imagePullSecret)
+                                  namespace: $(proNamespace)
+                                  dockerRegistryEndpoint: $(dockerRegistryServiceConnection)
+
+                            - task: replacetokens@5
+                              inputs:
+                                  rootDirectory: "$(System.ArtifactsDirectory)/manifests"
+                                  targetFiles: "kubernetes.yaml"
+                                  encoding: "auto"
+                                  tokenPattern: "custom"
+                                  tokenPrefix: "$"
+                                  tokenSuffix: "$"
+                                  writeBOM: true
+                                  actionOnMissing: "warn"
+                                  keepToken: false
+                                  actionOnNoFiles: "continue"
+                                  enableTransforms: false
+                                  enableRecursion: false
+                                  useLegacyPattern: false
+                                  enableTelemetry: true
+
+                            - task: KubernetesManifest@0
+                              displayName: Deploy to Kubernetes cluster
+                              inputs:
+                                  action: deploy
+                                  namespace: $(proNamespace)
+                                  manifests: |
+                                      $(System.ArtifactsDirectory)/manifests/kubernetes.yaml
+                                  imagePullSecrets: |
+                                      $(imagePullSecret)
+                                  containers: |
+                                      $(containerRegistry)/$(imageRepository):$(tag)
+
+    # Stage-Conduct E2E test in a deployed environment-Uat env, will be triggered on master branch and on Uat environment only
     - stage: E2E_Tests_UAT
       displayName: Run e2e tests on UAT
-      # condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+      condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
       dependsOn: Deploy_to_UAT
       jobs:
           - job: E2E_Tests
@@ -333,12 +406,3 @@ stages:
                       command: "custom"
                       customCommand: "run e2e"
                   continueOnError: true
-
-
-    
-
-
-
-                    
-
-

@@ -1,0 +1,79 @@
+parameters:
+    - name: vmImage
+      type: string
+      default: "ubuntu-latest"
+    - name: E2E_depends_on
+      type: string
+      default: ""
+    - name: e2e_azureSubscriptionEndpoint
+      type: string
+      default: ""
+    - name: resourcesGroupName
+      type: string
+      default: ""
+    - name: aksClusterName
+      type: string
+      default: ""
+    - name: clusterServiceName
+      type: string
+      default: ""
+    - name: namespace
+      type: string
+      default: ""
+
+stages:
+    - stage: E2E_Tests_UAT
+      displayName: Run e2e tests on UAT
+      dependsOn: ${{parameters.E2E_depends_on}}
+      jobs:
+          - job: E2E_Tests
+            displayName: E2E Tests on UAT environment
+            pool:
+                vmImage: ${{parameters.vmImage}}
+            steps:
+                - checkout: self
+
+                # This step is qu get the loadbalancer IP in uat environment for e2e test
+
+                - task: AzureCLI@2
+                  inputs:
+                      azureSubscription: ${{parameters.e2e_azureSubscriptionEndpoint}}
+                      scriptType: "bash"
+                      scriptLocation: "inlineScript"
+                      inlineScript: |
+                          az aks get-credentials --resource-group ${{parameters.resourcesGroupName}} --name ${{parameters.aksClusterName}}
+                  displayName: "Set up aks context"
+
+                - script: |
+                      SERVICE_IP=$(kubectl get svc ${{parameters.clusterServiceName}} --namespace=${{parameters.namespace}} -o=jsonpath="{.status.loadBalancer.ingress[0].ip}")
+
+                      echo "Setting API_URL for e2e tests..."
+                      sed -i "s,http://localhost:4200/,http://$SERVICE_IP/,g" e2e/protractor.conf.js
+                  displayName: "Get AKS Service IP and replace it in protractor.conf.js"
+
+                - task: NodeTool@0
+                  inputs:
+                      versionSource: "spec"
+                      versionSpec: "14.x"
+                  displayName: "Insall Node.js"
+
+                - task: Npm@1
+                  displayName: Install dependencies
+                  inputs:
+                      command: "install"
+
+                #  This step is to update the project chrome driver to 117.0.5938.132,
+                #  So it can align with the chrome driver version in ubuntu server of the azure pipeline
+                - script: |
+                      # Ubuntu chrome version
+                        google-chrome --version
+                      node node_modules/.bin/webdriver-manager update --gecko false
+                      node node_modules/.bin/webdriver-manager status
+                  displayName: "update project chrome version"
+
+                - task: Npm@1
+                  displayName: Run e2e tests
+                  inputs:
+                      command: "custom"
+                      customCommand: "run e2e"
+                  continueOnError: true

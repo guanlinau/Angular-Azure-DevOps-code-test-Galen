@@ -18,7 +18,8 @@ parameters:
 stages:
     - stage: Build
       displayName: Build and push stage
-      #   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+      condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+      dependsOn: SAST
       jobs:
           - job: Build
             displayName: Build

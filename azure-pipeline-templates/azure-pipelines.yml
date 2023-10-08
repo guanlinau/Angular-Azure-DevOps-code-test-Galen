@@ -1,18 +1,21 @@
-# trigger:
-# - master
-# trigger: none
+---
 trigger:
-    - Augular-DevOps-YAML-pipleine-Galen
+    branches:
+        include:
+            - "*"
+
+pr:
+    - main
 
 resources:
     - repo: self
 
 variables:
-    dockerRegistryServiceConnection: "5e1f01e6-4395-4c31-8174-dd4474fc2ca1"
-    imageRepository: "angularrepo"
+    dockerRegistryServiceConnection: "453a3951-5cbc-4f12-9589-8ad8592ee4dd"
+    imageRepository: "angularwebdevops"
     containerRegistry: "angularwebacr.azurecr.io"
-    dockerfilePath: "$(Build.SourcesDirectory)/Dockerfile"
-    tag: "$(Build.BuildId)"
+    dockerfilePath: $(Build.SourcesDirectory)/Dockerfile
+    tag: $(Build.BuildId)
     imageSecret: "image-key"
     uatNamespace: "angular-web-uat"
     proNamespace: "angular-web-pro"
@@ -20,36 +23,125 @@ variables:
     proReplicasNumber: 2
     uatEnvironment: "uat.angular-web-uat"
     proEnvironment: "pro.angular-web-pro"
-    deployToUatStage: "DeployOnUat"
-    deployToProStage: "DeployOnProd"
+    deployToUatStage: "Deploy_to_Uat"
+    deployToProStage: "DeployToProd"
+    build_dependsOn:
     vmImageName: "ubuntu-latest"
 
+    # DAST
+    #    The port of your application exposed in Dockerfile
+    docker_port: 8080
+    #    The name of your container running for being conducted DAST
+    container_name: "angular_dast"
+
+    # SonarCloud
+    sonarOrganization: "guanlinau"
+    sonarCliProjectKey: "guanlinau_Angular-Azure-DevOps-code-test-Galen"
+    sonarCliProjectName: "Angular-Azure-DevOps-code-test-Galen"
+    sonarCliSources: "."
+    pollingTimeoutSec: 300
+    jdkversion: "JAVA_HOME"
+    SASTdependsOn: "TestAndCodeAnalysis"
+
+    # E2E on Uat environment
+    e2e_azureSubscriptionEndpoint: "e2e_azureSubscriptionEndpoint"
+    resourcesGroupName: "angular-web-sg"
+    aksClusterName: "angular-web-aks"
+    clusterServiceName: "angular-web-service"
+
 stages:
-    - stage: Build
-      displayName: Build and push stage
+    # Stage is for code compile, Unit testing, testing coverage, Linting
+    - stage: TestAndCodeAnalysis
+      displayName: "Test&Code Analysis"
       jobs:
-          - job: Build
-            displayName: Build
+          - job: Compile_Test_Code_Analysis
+            displayName: "Compile_Test_Code_Analysis"
             pool:
                 vmImage: $(vmImageName)
+
+            # Our angular project uses Node.js v14.21.3
             steps:
-                - task: Docker@2
-                  displayName: Build and push an image to container registry
+                - task: NodeTool@0
                   inputs:
-                      command: buildAndPush
-                      repository: $(imageRepository)
-                      dockerfile: $(dockerfilePath)
-                      containerRegistry: $(dockerRegistryServiceConnection)
-                      tags: |
-                          - $(tag)
-
-                - task: PublishPipelineArtifact@1
-                  displayName: Publish the manifests folder to pipeline
+                      versionSource: "spec"
+                      versionSpec: "14.x"
+                  displayName: "Install Node.js"
+                - task: Npm@1
                   inputs:
-                      targetPath: "$(Build.SourcesDirectory)/manifests"
-                      artifact: "manifests"
-                      publishLocation: "pipeline"
+                      command: "install"
+                  displayName: "Install dependencies"
 
+                #  Build and compile the Angular project
+                - task: Npm@1
+                  inputs:
+                      command: "custom"
+                      customCommand: "run build"
+                  displayName: "Run build for compiling"
+
+                # Run unit tests and test coverage
+                - script: |
+                      npx ng test --code-coverage --watch=false
+                  displayName: "Run unit tesing and access the code coverage"
+
+                # Accessing the unit testing code coverage
+                - task: PublishCodeCoverageResults@1
+                  displayName: "Access and Publish code coverage results"
+                  condition: succeededOrFailed()
+                  inputs:
+                      codeCoverageTool: "Cobertura"
+                      summaryFileLocation: $(codeCoverageSummaryFileLocation)
+                      reportDirectory: $(codeCoverageReportDirectory)
+                      failIfCoverageEmpty: false
+
+                # Accessing the unit testing results report
+                - task: PublishTestResults@2
+                  displayName: "Access and Publish unit test results"
+                  condition: succeededOrFailed()
+                  inputs:
+                      searchFolder: $(System.DefaultWorkingDirectory)
+                      testRunTitle: Unit_test_report
+                      testResultsFormat: JUnit
+                      testResultsFiles: $(unittestResultsFiles)
+
+                # Linting and code analysis
+                - task: Npm@1
+                  inputs:
+                      command: "custom"
+                      customCommand: "run lint"
+                  displayName: "Run Linting and code quality analysis"
+
+    # Stage-Scan code vulnerabilities: SAST- Static application security testing
+    - template: azure-pipeline-templates/scan-code-sast-sonarcloud-template.yml
+      parameters:
+          sonarOrganization: $(sonarOrganization)
+          sonarCliProjectKey: $(sonarCliProjectKey)
+          sonarCliProjectName: $(sonarCliProjectName)
+          sonarCliSources: $(sonarCliSources)
+          vmImage: $(vmImageName)
+          pollingTimeoutSec: $(pollingTimeoutSec)
+          jdkversion: $(jdkversion)
+          dependsOn: ${SASTdependsOn}
+
+    # Stage-DAST-Dynamic Application Security Test to Scan Code Vulnerabilities
+    - template: azure-pipeline-templates/scan-code-dast-template.yml
+      parameters:
+          repository: $(imageRepository)
+          containerRegistry: $(containerRegistry)
+          docker_port: $(uatNamespace)
+          container_name: $(uatReplicasNumber)
+          tag: $(tag)
+          vmImage: $(vmImageName)
+
+    # Stage-Build docker image and push it into ACR and Versioning Docker images/Artifacts
+    - template: azure-pipeline-templates/build-template.yml
+      parameters:
+          repository: $(imageRepository)
+          containerRegistry: $(containerRegistry)
+          dockerfile: $(dockerfilePath)
+          tag: $(tag)
+          vmImage: $(vmImageName)
+
+    # Stage-Deploy to Uat environment automatically
     - template: azure-pipeline-templates/deploy-template.yml
       parameters:
           stageName: $(deployToUatStage)
@@ -62,3 +154,28 @@ stages:
           vmImage: $(vmImageName)
           environment: $(uatEnvironment)
           dockerRegistryEndpoint: $(dockerRegistryServiceConnection)
+
+    # Stage-Deploy to Prod environment manually, need approve!
+    - template: azure-pipeline-templates/deploy-template.yml
+      parameters:
+          stageName: $(deployToUatStage)
+          imagePullSecret: $(imageSecret)
+          angular_web_env: $(uatNamespace)
+          replica_number: $(uatReplicasNumber)
+          acr_server: $(containerRegistry)
+          acr_repo_name: $(imageRepository)
+          image_version: $(tag)
+          vmImage: $(vmImageName)
+          environment: $(uatEnvironment)
+          dockerRegistryEndpoint: $(dockerRegistryServiceConnection)
+
+    # Stage-E2E to Uat environment
+    - template: azure-pipeline-templates/e2e-template.yml
+      parameters:
+          E2E_depends_on: $(deployToUatStage)
+          e2e_azureSubscriptionEndpoint: $(e2e_azureSubscriptionEndpoint)
+          resourcesGroupName: $(resourcesGroupName)
+          aksClusterName: $(aksClusterName)
+          vmImage: $(vmImageName)
+          clusterServiceName: $(clusterServiceName)
+          namespace: $(uatNamespace)
