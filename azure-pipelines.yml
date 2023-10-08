@@ -80,7 +80,7 @@ variables:
 
     # DAST
 - name: DAST_RegistryServiceConnection
-  value: $[variables.DAST_RegistryServiceConnection]
+  value: 'angularwebacr-1506'
 
 
 stages:
