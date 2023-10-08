@@ -36,7 +36,7 @@ variables:
 
     # SonarCloud
     sonarOrganization: "guanlinau"
-    sonarCliProjectKey: "guanlinau_Angular-Azure-DevOps-code-test-Galen"
+
     sonarCliProjectName: "Angular-Azure-DevOps-code-test-Galen"
     sonarCliSources: "."
     pollingTimeoutSec: 300
@@ -49,6 +49,8 @@ variables:
     aksClusterName: "angular-web-aks"
     clusterServiceName: "angular-web-service"
 
+    # This value was stored in Variable provided by Azure pipeline for security purpose.
+    # sonarCliProjectKey: "xxxx"
 stages:
     # Stage is for code compile, Unit testing, testing coverage, Linting
     - stage: TestAndCodeAnalysis

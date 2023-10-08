@@ -14,7 +14,15 @@ variables:
     CI: true
     vmImageName: "ubuntu-latest"
     # Azure Container Registry
-
+    #Container registry service connection established during pipeline creation
+    dockerRegistryServiceConnection: "453a3951-5cbc-4f12-9589-8ad8592ee4dd"
+    DAST_RegistryServiceConnection: "angularwebacr-1506"
+    imageRepository: "angularwebdevops"
+    containerRegistry: "angularwebacr.azurecr.io"
+    azureSubscriptionEndpoint: "e2e_azureSubscriptionEndpoint"
+    resourcesGroupName: "angular-web-sg"
+    aksClusterName: "angular-web-aks"
+    clusterServiceName: "angular-web-service"
     dockerfilePath: "$(Build.SourcesDirectory)/Dockerfile"
     tag: "$(Build.BuildId)"
     # Azure kubernetes service
@@ -38,16 +46,7 @@ variables:
     pollingTimeoutSec: "300"
     jdkversion: "JAVA_HOME"
 
-    # The value of those variables below were stored in Variable provided by Azure pipeline for security purpose.
-    #Container registry service connection established during pipeline creation
-    dockerRegistryServiceConnection: "453a3951-5cbc-4f12-9589-8ad8592ee4dd"
-    DAST_RegistryServiceConnection: "angularwebacr-1506"
-    imageRepository: "angularwebdevops"
-    containerRegistry: "angularwebacr.azurecr.io"
-    azureSubscriptionEndpoint: "e2e_azureSubscriptionEndpoint"
-    resourcesGroupName: "angular-web-sg"
-    aksClusterName: "angular-web-aks"
-    clusterServiceName: "angular-web-service"
+    # This value was stored in Variable provided by Azure pipeline for security purpose.
     sonarCliProjectKey: "guanlinau_Angular-Azure-DevOps-code-test-Galen"
 
 stages:
