@@ -14,6 +14,8 @@ This project is for using Azure pipeline to continuous integration and continuou
 
 ## 1-Analysis the project
 
+!!! Our project uses node version v14.
+
 1-Programming language & framework:javascript/typescript, angular.
 
 2-Build tool: npm
@@ -40,19 +42,19 @@ This project is for using Azure pipeline to continuous integration and continuou
 
 ## 3-Dockerize the angular app
 
-@-Adopt alpine base image
+1-Adopt alpine base image
 
-@-Implement via multi-stage build
+2-Implement via multi-stage build
 
-@-Optimize the image layer
+3-Optimize the image layer
 
-@-Use non-root user to run the docker container
+4-Use non-root user to run the docker container
 
 ![image](./IMG_README/Screenshot%202023-10-08%20at%205.55.41%20pm.png)
 
 ## 4-Write the kubernetes configuration-Deployment, Service
 
-@- Define the service traffic type as Load balancer to be public assess.
+1- Define the service traffic type as Load balancer to be public assess.
 
 ![image](./IMG_README/Screenshot%202023-10-08%20at%205.57.14%20pm.png)
 
@@ -150,3 +152,5 @@ This stage is to conduct E2E in a deployed environment, here is the Uat environm
 4.2-The second one is to downgrade the version of microsoft-host ubuntu server using our pipeline. I looked up the documentation, only v24 and v20 available are available as a microsoft-host ubuntu server, and both the chrome version is version 117.
 
 4.3-The third one is to use self-managed ubuntu server with the chrome version is 114. But i did not try it due to the time limit.
+
+Hope we can discuss it further.
