@@ -42,6 +42,9 @@ variables:
     sonarCliProjectName: "Angular-Azure-DevOps-code-test-Galen"
     sonarCliSources: "."
 
+    # DAST
+    DAST_dockerServiceConnection: 'angularwebacr-1506'
+
 stages:
     # This stage is for code compile, Unit testing, testing coverage, Linting and
     # Static application security testing
@@ -176,8 +179,7 @@ stages:
 
         - task: Docker@2
           inputs:
-            containerRegistry: 'angularwebacr-1506'
-            # containerRegistry: $(containerRegistry)
+            containerRegistry: $(DAST_dockerServiceConnection)
             command: 'login'
           displayName: Login to ACR
 
