@@ -21,8 +21,8 @@ variables:
   value: "ubuntu-latest"
     # Azure Container Registry
     # Container registry service connection established during pipeline creation
-- name: dockerRegistryServiceConnection
-  value: "453a3951-5cbc-4f12-9589-8ad8592ee4dd"
+# - name: dockerRegistryServiceConnection
+#   value: "453a3951-5cbc-4f12-9589-8ad8592ee4dd"
 - name: imageRepository
   value: $[variables.imageRepository]
 - name: containerRegistry
@@ -79,8 +79,8 @@ variables:
   value: JAVA_HOME
 
     # DAST
-- name: DAST_RegistryServiceConnection
-  value: 'angularwebacr-1506'
+# - name: DAST_RegistryServiceConnection
+#   value: 'angularwebacr-1506'
 
 
 stages:
