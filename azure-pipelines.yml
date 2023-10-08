@@ -13,74 +13,44 @@ resources:
     - repo: self
 
 variables:
-- group: angurlar_web_variable_groups
-
-- name: CI
-  value: ture
-- name: vmImageName
-  value: "ubuntu-latest"
+    CI: true
+    vmImageName: "ubuntu-latest"
     # Azure Container Registry
     # Container registry service connection established during pipeline creation
-# - name: dockerRegistryServiceConnection
-#   value: "453a3951-5cbc-4f12-9589-8ad8592ee4dd"
-- name: imageRepository
-  value: $[variables.imageRepository]
-- name: containerRegistry
-  value: $[variables.containerRegistry]
-- name: dockerfilePath
-  value: "$(Build.SourcesDirectory)/Dockerfile"
-- name: tag
-  value: "$(Build.BuildId)"
+    dockerRegistryServiceConnection: "453a3951-5cbc-4f12-9589-8ad8592ee4dd"
+    imageRepository: "angularwebdevops"
+    containerRegistry: "angularwebacr.azurecr.io"
+    dockerfilePath: "$(Build.SourcesDirectory)/Dockerfile"
+    tag: "$(Build.BuildId)"
 
     # Azure kubernetes service
-- name: imageSecret
-  value: $[variables.imageSecret]
-- name: uatNamespace
-  value: "angular-web-uat"
-- name: proNamespace
-  value: "angular-web-pro"
-- name: uatReplicasNumber
-  value: 1
-- name: proReplicasNumber
-  value: 2
-- name: uatEnvironment
-  value: "uat.angular-web-uat"
-- name: proEnvironment
-  value: "pro.angular-web-pro"
-- name: imageazureSubscriptionEndpointSecret
-  value: $[variables.azureSubscriptionEndpoint]
-- name: resourcesGroupName
-  value: $[variables.resourcesGroupName]
-- name: aksClusterName
-  value: $[variables.aksClusterName]
-- name: clusterServiceName
-  value: $[variables.clusterServiceName]
+    imageSecret: "image-key"
+    uatNamespace: "angular-web-uat"
+    proNamespace: "angular-web-pro"
+    uatReplicasNumber: 1
+    proReplicasNumber: 2
+    uatEnvironment: "uat.angular-web-uat"
+    proEnvironment: "pro.angular-web-pro"
+    azureSubscriptionEndpoint: "e2e_azureSubscriptionEndpoint"
+    resourcesGroupName: "angular-web-sg"
+    aksClusterName: "angular-web-aks"
+    clusterServiceName: "angular-web-service"
 
     # unit testing
-- name: unittestResultsFiles
-  value: "src/test-results/Chrome_Headless_117.0.5938.*_(Linux_x86_64)/TESTS-*.xml"
-- name: codeCoverageSummaryFileLocation
-  value: "coverage/angular11-testing-examples/cobertura-coverage.xml"
-- name: codeCoverageReportDirectory
-  value: "coverage/angular11-testing-examples/"
+    unittestResultsFiles: "src/test-results/Chrome_Headless_117.0.5938.*_(Linux_x86_64)/TESTS-*.xml"
+    codeCoverageSummaryFileLocation: "coverage/angular11-testing-examples/cobertura-coverage.xml"
+    codeCoverageReportDirectory: "coverage/angular11-testing-examples/"
 
     # SonarCloud
-- name: sonarOrganization
-  value: $[variables.sonarOrganization]
-- name: sonarCliProjectKey
-  value: $[variables.sonarCliProjectKey]
-- name: sonarCliProjectName
-  value: "Angular-Azure-DevOps-code-test-Galen"
-- name: sonarCliSources
-  value: "."
-- name: pollingTimeoutSec
-  value: "300"
-- name: jdkversion
-  value: JAVA_HOME
+    sonarOrganization: "guanlinau"
+    sonarCliProjectKey: "guanlinau_Angular-Azure-DevOps-code-test-Galen"
+    sonarCliProjectName: "Angular-Azure-DevOps-code-test-Galen"
+    sonarCliSources: "."
+    pollingTimeoutSec: "300"
+    jdkversion: "JAVA_HOME"
 
     # DAST
-# - name: DAST_RegistryServiceConnection
-#   value: 'angularwebacr-1506'
+    DAST_dockerServiceConnection: 'angularwebacr-1506'
 
 
 stages:
