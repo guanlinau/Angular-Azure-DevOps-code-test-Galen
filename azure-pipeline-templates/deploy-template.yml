@@ -42,7 +42,7 @@ stages:
           acr_repo_name: ${{parameters.acr_repo_name}}
           image_version: ${{parameters.image_version}}
       jobs:
-          - deployment: ${{parameters.stageName}}
+          - deployment: ${{parameters.deployName}}
             displayName: Deploy to ${{parameters.deployName}}
             pool:
                 vmImage: ${{parameters.vmImage}}
