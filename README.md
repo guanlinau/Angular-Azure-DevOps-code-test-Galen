@@ -4,25 +4,25 @@
 
 This project is for using Azure pipeline to continuous integration and continuous delivery the Angular web app running as a container into Azure Kubernetes Service. The Angular web docker images are pushed into Azure Container Registry. Code source are stored in GitHub.
 
-## IP address
+## IP addresses
 
-1-UAT ip: http://20.227.63.214/
+1-UAT IP: http://20.227.63.214/
 
-2-Prod ip: http://20.227.62.2/
+2-Prod IP: http://20.227.62.2/
 
 ## Steps
 
 ## 1-Analysis the project
 
-@-programming language:javascript/typescript
+1-Programming language & framework:javascript/typescript, angular.
 
-@-build tool: npm
+2-Build tool: npm
 
-@-ci/cd tool: Azure DevOps pipeline
+3-CI/CD tool: Azure DevOps pipeline
 
-@-Cloud service : Azure kubernetes service, Azure container registry
+4-Cloud service : Azure kubernetes service, Azure container registry
 
-@-Others: Docker, GitHub, kuberctl
+4-Others: Docker, GitHub, kuberctl
 
 ## 2-Provision the infrastructure of resource group, AKS and ACR manually
 
@@ -134,3 +134,19 @@ This stage is to conduct E2E in a deployed environment, here is the Uat environm
 ![image](./IMG_README/Screenshot%202023-10-08%20at%207.12.29%20pm.png)
 
 ![image](./IMG_README/Screenshot%202023-10-08%20at%207.14.49%20pm.png)
+
+### 6.7.1 Exploration and explanation
+
+1- In this stage, i used the kubectl to extract the uat environment load balancer Ip, and then use sed to replace the e2e localhost:4200 with that load balancer Ip in protractor.conf.js file. So e2e can conduct testing in the uat environment-a deployed environment.
+
+2- Actually, this stage was failed finally. After done some research and debug, I found the chrome version in the azure pipeline ubuntu server is version 117, while our project's ChromeDriver version is specific to 114.
+
+3- I tried to update our project's ChromeDriver using webdriver-manager, but it was version 114.
+
+4- There are might be three ways to figure this issue out, but I can not guarantee it is right, as I actually have done that before.
+
+4.1-The first way is to upgrade our project's e2e configuration, so it can be compatible with chrome version 117.
+
+4.2-The second one is to downgrade the version of microsoft-host ubuntu server using our pipeline. I looked up the documentation, only v24 and v20 available are available as a microsoft-host ubuntu server, and both the chrome version is version 117.
+
+4.3-The third one is to use self-managed ubuntu server with the chrome version is 114. But i did not try it due to the time limit.
