@@ -7,7 +7,7 @@
 # pr:
 #     - main
 trigger:
-    - dast_testing
+    - reuable_deploy_pipeline
 
 resources:
     - repo: self
@@ -191,18 +191,20 @@ stages:
 
                 - task: Docker@2
                   inputs:
-                      containerRegistry: "angularwebacr-1506"
-                      # containerRegistry: $(containerRegistry)
+                      # containerRegistry: "angularwebacr-1506"
+                      containerRegistry: $(containerRegistry)
                       command: "login"
                   displayName: Login to ACR
 
                 - script: |
+                      ls .docker
+                      cat .docker/config.json
                       docker run -d -p 80:8080 --name angular_dast $(containerRegistry)/$(imageRepository):$(tag)
                       docker ps -a
                   displayName: "Run a angular docker"
 
                 - bash: |
-                      chmod -R 777  ./
+                      chmod -R 764  ./
                       docker run --rm -v $(pwd):/zap/wrk/:rw -t owasp/zap2docker-stable zap-full-scan.py -t http://$(ip -f inet -o addr show docker0 | awk '{print $4}' | cut -d '/' -f 1):80 -x xml_report.xml
                       true
                   displayName: "Owasp Container Scan"
