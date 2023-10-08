@@ -18,8 +18,8 @@ variables:
 
     # Azure Container Registry
     # Container registry service connection established during pipeline creation
-    dockerRegistryServiceConnection: "453a3951-5cbc-4f12-9589-8ad8592ee4dd"
-    imageRepository: "angularwebdevops"
+    dockerRegistryServiceConnection: $(dockerRegistryServiceConnection)
+    imageRepository: $(imageRepository)
     containerRegistry: "angularwebacr.azurecr.io"
     dockerfilePath: "$(Build.SourcesDirectory)/Dockerfile"
     tag: "$(Build.BuildId)"
