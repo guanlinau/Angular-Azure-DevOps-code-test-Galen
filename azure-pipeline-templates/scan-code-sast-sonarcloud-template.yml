@@ -1,0 +1,57 @@
+parameters:
+    - name: vmImage
+      type: string
+      default: "ubuntu-latest"
+    - name: sonarOrganization
+      type: string
+      default: ""
+    - name: sonarCliProjectKey
+      type: string
+      default: ""
+    - name: sonarCliProjectName
+      type: string
+      default: ""
+    - name: sonarCliSources
+      type: string
+      default: "."
+    - name: pollingTimeoutSec
+      type: string
+      default: "300"
+    - name: jdkversion
+      type: string
+      default: "JAVA_HOME"
+    - name: dependsOn
+
+stages:
+    - stage: SAST
+      displayName: SAST
+      condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+      dependsOn: ${{parameters.dependsOn}}
+      jobs:
+          # This job is for Static application security testing
+          - job: Scan_Code_Vulnerabilities
+            # dependsOn: Compile_Test_Code_Analysis
+            displayName: "SAST"
+            pool:
+            vmImage: ${{parameters.vmImage}}
+
+            # Using SonarCloud for static application security testing
+            steps:
+                - task: SonarCloudPrepare@1
+                  displayName: "Prepare Analysis Configuration"
+                  inputs:
+                      SonarCloud: "sonarcloud"
+                      organization: ${{parameters.sonarOrganization}}
+                      scannerMode: "CLI"
+                      configMode: "manual"
+                      cliProjectKey: ${{parameters.sonarCliProjectKey}}
+                      cliProjectName: ${{parameters.sonarCliProjectName}}
+                      cliSources: ${{parameters.sonarCliSources}
+                - task: SonarCloudAnalyze@1
+                  displayName: "Run Code Analysis"
+                  inputs:
+                      jdkversion: ${{parameters.jdkversion}}
+                - task: SonarCloudPublish@1
+                  displayName: "Publish Quality Gate Result"
+                  inputs:
+                      pollingTimeoutSec: ${{parameters.pollingTimeoutSec}}

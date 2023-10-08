@@ -1,34 +1,158 @@
 ---
+# trigger:
+#     branches:
+#         include:
+#             - "*"
+
+# pr:
+#     - main
 trigger:
-    - reuable_deploy_pipeline
+    - dast_testing
 
 resources:
     - repo: self
 
 variables:
+    CI: true
+    vmImageName: "ubuntu-latest"
+
+    # Azure Container Registry
+    # Container registry service connection established during pipeline creation
     dockerRegistryServiceConnection: "453a3951-5cbc-4f12-9589-8ad8592ee4dd"
     imageRepository: "angularwebdevops"
     containerRegistry: "angularwebacr.azurecr.io"
-    dockerfilePath: $(Build.SourcesDirectory)/Dockerfile
-    tag: $(Build.BuildId)
+    dockerfilePath: "$(Build.SourcesDirectory)/Dockerfile"
+    tag: "$(Build.BuildId)"
+
+    # Azure kubernetes service
     imageSecret: "image-key"
     uatNamespace: "angular-web-uat"
     proNamespace: "angular-web-pro"
-    uatReplicasNumber: "1"
-    proReplicasNumber: "2"
+    uatReplicasNumber: 1
+    proReplicasNumber: 2
     uatEnvironment: "uat.angular-web-uat"
     proEnvironment: "pro.angular-web-pro"
-    galen: "uat"
-    vmImageName: "ubuntu-latest"
+    azureSubscriptionEndpoint: "e2e_azureSubscriptionEndpoint"
+    resourcesGroupName: "angular-web-sg"
+    aksClusterName: "angular-web-aks"
+    clusterServiceName: "angular-web-service"
+
+    # unit testing
+    unittestResultsFiles: "src/test-results/Chrome_Headless_117.0.5938.*_(Linux_x86_64)/TESTS-*.xml"
+    codeCoverageSummaryFileLocation: "coverage/angular11-testing-examples/cobertura-coverage.xml"
+    codeCoverageReportDirectory: "coverage/angular11-testing-examples/"
+
+    # SonarCloud
+    sonarOrganization: "guanlinau"
+    sonarCliProjectKey: "guanlinau_Angular-Azure-DevOps-code-test-Galen"
+    sonarCliProjectName: "Angular-Azure-DevOps-code-test-Galen"
+    sonarCliSources: "."
 
 stages:
-    - stage: Build
-      displayName: Build and push stage
+    # Stage is for code compile, Unit testing, testing coverage, Linting
+    - stage: TestAndCodeAnalysis
+      displayName: "Test&Code Analysis"
       jobs:
-          - job: Build
-            displayName: Build
+          - job: Compile_Test_Code_Analysis
+            displayName: "Compile_Test_Code_Analysis"
             pool:
                 vmImage: $(vmImageName)
+
+            # Our angular project uses Node.js v14.21.3
+            steps:
+                - task: NodeTool@0
+                  inputs:
+                      versionSource: "spec"
+                      versionSpec: "14.x"
+                  displayName: "Install Node.js"
+                - task: Npm@1
+                  inputs:
+                      command: "install"
+                  displayName: "Install dependencies"
+
+                #  Build and compile the Angular project
+                - task: Npm@1
+                  inputs:
+                      command: "custom"
+                      customCommand: "run build"
+                  displayName: "Run build for compiling"
+
+                # Run unit tests and test coverage
+                - script: |
+                      npx ng test --code-coverage --watch=false
+                  displayName: "Run unit tesing and access the code coverage"
+
+                # Accessing the unit testing code coverage
+                - task: PublishCodeCoverageResults@1
+                  displayName: "Access and Publish code coverage results"
+                  condition: succeededOrFailed()
+                  inputs:
+                      codeCoverageTool: "Cobertura"
+                      summaryFileLocation: $(codeCoverageSummaryFileLocation)
+                      reportDirectory: $(codeCoverageReportDirectory)
+                      failIfCoverageEmpty: false
+
+                # Accessing the unit testing results report
+                - task: PublishTestResults@2
+                  displayName: "Access and Publish unit test results"
+                  condition: succeededOrFailed()
+                  inputs:
+                      searchFolder: $(System.DefaultWorkingDirectory)
+                      testRunTitle: Unit_test_report
+                      testResultsFormat: JUnit
+                      testResultsFiles: $(unittestResultsFiles)
+
+                # Linting and code analysis
+                - task: Npm@1
+                  inputs:
+                      command: "custom"
+                      customCommand: "run lint"
+                  displayName: "Run Linting and code quality analysis"
+
+    # Stage- Static Application Security Test
+    - stage: SAST
+      displayName: SAST
+      dependsOn: TestAndCodeAnalysis
+      jobs:
+          # This job is for Static application security testing
+          - job: Scan_Code_Vulnerabilities
+            # dependsOn: Compile_Test_Code_Analysis
+            displayName: "Scan_Code_Vulnerabilities"
+            pool:
+                vmImage: $(vmImageName)
+
+            # Using SonarCloud for static application security testing
+            steps:
+                - task: SonarCloudPrepare@1
+                  displayName: "Prepare Analysis Configuration"
+                  inputs:
+                      SonarCloud: "sonarcloud"
+                      organization: $(sonarOrganization)
+                      scannerMode: "CLI"
+                      configMode: "manual"
+                      cliProjectKey: $(sonarCliProjectKey)
+                      cliProjectName: $(sonarCliProjectName)
+                      cliSources: $(sonarCliSources)
+                - task: SonarCloudAnalyze@1
+                  displayName: "Run Code Analysis"
+                  inputs:
+                      jdkversion: "JAVA_HOME"
+                - task: SonarCloudPublish@1
+                  displayName: "Publish Quality Gate Result"
+                  inputs:
+                      pollingTimeoutSec: "300"
+
+    # Stage-Build Docker image, versioning images/artifacts and push images/artifacts into ACR, will be triggered on Master branch only
+    - stage: Build
+      displayName: Build and push Docker image
+      dependsOn: SAST
+      # condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+      jobs:
+          - job: Build
+            displayName: Build and push Docker image stage
+            pool:
+                vmImage: $(vmImageName)
+
             steps:
                 - task: Docker@2
                   displayName: Build and push an image to container registry
@@ -38,23 +162,243 @@ stages:
                       dockerfile: $(dockerfilePath)
                       containerRegistry: $(dockerRegistryServiceConnection)
                       tags: |
-                          - $(tag)
+                          $(tag)
+
                 - task: PublishPipelineArtifact@1
                   displayName: Publish the manifests folder to pipeline
                   inputs:
-                      targetPath: $(Build.SourcesDirectory)/manifests
-                      artifact: manifests
-                      publishLocation: pipeline
+                      targetPath: "$(Build.SourcesDirectory)/manifests"
+                      artifact: "manifests"
+                      publishLocation: "pipeline"
 
-    - template: azure-pipeline-templates/deploy-template.yml
-      parameters:
-          galen: $(galen)
+    # This stage is for Dynamic application security testing
+    - stage: DAST
+      displayName: DAST
+      # condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+      dependsOn: Build
+      jobs:
+          - job: DAST
+            displayName: Dynamic Application Security Test
+            pool:
+                vmImage: "ubuntu-latest"
+            steps:
+                - checkout: self
+
+                - task: Docker@2
+                  inputs:
+                      containerRegistry: "angularwebacr-1506"
+                      # containerRegistry: $(containerRegistry)
+                      command: "login"
+                  displayName: Login to ACR
+
+                - script: |
+                      docker run -d -p 80:8080 --name angular_dast $(containerRegistry)/$(imageRepository):$(tag)
+                      docker ps -a
+                  displayName: "Run a angular docker"
+
+                - bash: |
+                      chmod -R 777  ./
+                      docker run --rm -v $(pwd):/zap/wrk/:rw -t owasp/zap2docker-stable zap-full-scan.py -t http://$(ip -f inet -o addr show docker0 | awk '{print $4}' | cut -d '/' -f 1):80 -x xml_report.xml
+                      true
+                  displayName: "Owasp Container Scan"
+
+                - powershell: |
+                      $XslPath = "$(System.DefaultWorkingDirectory)/xml_to_nunit.xslt"
+                      $XmlInputPath = "xml_report.xml"
+                      $XmlOutputPath = "converted_report.xml"
+                      $XslTransform = New-Object System.Xml.Xsl.XslCompiledTransform
+                      $XslTransform.Load($XslPath)
+                      $XslTransform.Transform($XmlInputPath, $XmlOutputPath)
+                  displayName: "Owasp Generate Nunit type file"
+                - task: PublishTestResults@2
+                  displayName: "Publish Test Results"
+                  inputs:
+                      testRunTitle: DAST_code_scan_report
+                      testResultsFormat: "NUnit"
+                      testResultsFiles: "converted_report.xml"
+
+    # Stage-Deploy into Uat environment for User Acceptance Testing and E2E, triggered on Master branch only
+    - stage: Deploy_to_UAT
+      displayName: Deploy to UAT stage
+      # condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+      dependsOn: Build
+      variables:
           imagePullSecret: $(imageSecret)
-          angular_web_env: $(uatNamespace)
-          replica_number: $(uatReplicasNumber)
-          acr_server: $(containerRegistry)
-          acr_repo_name: $(imageRepository)
-          image_version: $(tag)
-          vmImage: $(vmImageName)
-          environment: $(uatEnvironment)
-          dockerRegistryEndpoint: $(dockerRegistryServiceConnection)
+          angular-web-env: $(uatNamespace)
+          replica-number: $(uatReplicasNumber)
+          acr-server: $(containerRegistry)
+          acr-repo-name: $(imageRepository)
+          image-version: $(tag)
+      jobs:
+          - deployment: Deploy_to_UAT
+            displayName: Deploy to UAT envrionment
+            pool:
+                vmImage: $(vmImageName)
+            environment: $(uatEnvironment)
+            strategy:
+                runOnce:
+                    deploy:
+                        steps:
+                            - task: DownloadPipelineArtifact@2
+                              inputs:
+                                  artifactName: "manifests"
+                                  downloadPath: "$(System.ArtifactsDirectory)/manifests"
+
+                            - task: KubernetesManifest@0
+                              displayName: Create imagePullSecret
+                              inputs:
+                                  action: createSecret
+                                  secretName: $(imagePullSecret)
+                                  namespace: $(uatNamespace)
+                                  dockerRegistryEndpoint: $(dockerRegistryServiceConnection)
+
+                            - task: replacetokens@5
+                              inputs:
+                                  rootDirectory: "$(System.ArtifactsDirectory)/manifests"
+                                  targetFiles: "kubernetes.yaml"
+                                  encoding: "auto"
+                                  tokenPattern: "custom"
+                                  tokenPrefix: "$"
+                                  tokenSuffix: "$"
+                                  writeBOM: true
+                                  actionOnMissing: "warn"
+                                  keepToken: false
+                                  actionOnNoFiles: "continue"
+                                  enableTransforms: false
+                                  enableRecursion: false
+                                  useLegacyPattern: false
+                                  enableTelemetry: true
+
+                            - task: KubernetesManifest@0
+                              displayName: Deploy to Kubernetes cluster
+                              inputs:
+                                  action: deploy
+                                  namespace: $(uatNamespace)
+                                  manifests: |
+                                      $(System.ArtifactsDirectory)/manifests/kubernetes.yaml
+                                  imagePullSecrets: |
+                                      $(imagePullSecret)
+                                  containers: |
+                                      $(containerRegistry)/$(imageRepository):$(tag)
+
+    # Stage-Deploy into Prod environment for end-users, triggered on Master branch and manually approve
+    - stage: Deploy_to_Prod
+      displayName: Deploy to UAT stage
+      #   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+      dependsOn: Build
+      variables:
+          imagePullSecret: $(imageSecret)
+          angular-web-env: $(proNamespace)
+          replica-number: $(proReplicasNumber)
+          acr-server: $(containerRegistry)
+          acr-repo-name: $(imageRepository)
+          image-version: $(tag)
+      jobs:
+          - deployment: Deploy_to_Prod
+            displayName: Deploy to prod envrionment
+            pool:
+                vmImage: $(vmImageName)
+            environment: $(proEnvironment)
+            strategy:
+                runOnce:
+                    deploy:
+                        steps:
+                            - task: DownloadPipelineArtifact@2
+                              inputs:
+                                  artifactName: "manifests"
+                                  downloadPath: "$(System.ArtifactsDirectory)/manifests"
+
+                            - task: KubernetesManifest@0
+                              displayName: Create imagePullSecret
+                              inputs:
+                                  action: createSecret
+                                  secretName: $(imagePullSecret)
+                                  namespace: $(proNamespace)
+                                  dockerRegistryEndpoint: $(dockerRegistryServiceConnection)
+
+                            - task: replacetokens@5
+                              inputs:
+                                  rootDirectory: "$(System.ArtifactsDirectory)/manifests"
+                                  targetFiles: "kubernetes.yaml"
+                                  encoding: "auto"
+                                  tokenPattern: "custom"
+                                  tokenPrefix: "$"
+                                  tokenSuffix: "$"
+                                  writeBOM: true
+                                  actionOnMissing: "warn"
+                                  keepToken: false
+                                  actionOnNoFiles: "continue"
+                                  enableTransforms: false
+                                  enableRecursion: false
+                                  useLegacyPattern: false
+                                  enableTelemetry: true
+
+                            - task: KubernetesManifest@0
+                              displayName: Deploy to Kubernetes cluster
+                              inputs:
+                                  action: deploy
+                                  namespace: $(proNamespace)
+                                  manifests: |
+                                      $(System.ArtifactsDirectory)/manifests/kubernetes.yaml
+                                  imagePullSecrets: |
+                                      $(imagePullSecret)
+                                  containers: |
+                                      $(containerRegistry)/$(imageRepository):$(tag)
+
+    # Stage-Conduct E2E test in a deployed environment-Uat env, will be triggered on master branch and on Uat environment only
+    - stage: E2E_Tests_UAT
+      displayName: Run e2e tests on UAT
+      # condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+      dependsOn: Deploy_to_UAT
+      jobs:
+          - job: E2E_Tests
+            displayName: E2E Tests on UAT environment
+            pool:
+                vmImage: $(vmImageName)
+            steps:
+                - checkout: self
+
+                # This step is qu get the loadbalancer IP in uat environment for e2e test
+
+                - task: AzureCLI@2
+                  inputs:
+                      azureSubscription: $(azureSubscriptionEndpoint)
+                      scriptType: "bash"
+                      scriptLocation: "inlineScript"
+                      inlineScript: |
+                          az aks get-credentials --resource-group $(resourcesGroupName) --name $(aksClusterName)
+                  displayName: "Set up aks context"
+
+                - script: |
+                      SERVICE_IP=$(kubectl get svc $(clusterServiceName) --namespace=$(uatNamespace) -o=jsonpath="{.status.loadBalancer.ingress[0].ip}")
+
+                      echo "Setting API_URL for e2e tests..."
+                      sed -i "s,http://localhost:4200/,http://$SERVICE_IP/,g" e2e/protractor.conf.js
+                  displayName: "Get AKS Service IP and replace it in protractor.conf.js"
+
+                - task: NodeTool@0
+                  inputs:
+                      versionSource: "spec"
+                      versionSpec: "14.x"
+                  displayName: "Insall Node.js"
+
+                - task: Npm@1
+                  displayName: Install dependencies
+                  inputs:
+                      command: "install"
+
+                #  This step is to update the project chrome driver to 117.0.5938.132,
+                #  So it can align with the chrome driver version in ubuntu server of the azure pipeline
+                - script: |
+                      # Ubuntu chrome version
+                        google-chrome --version
+                      node node_modules/.bin/webdriver-manager update --gecko false
+                      node node_modules/.bin/webdriver-manager status
+                  displayName: "update project chrome version"
+
+                - task: Npm@1
+                  displayName: Run e2e tests
+                  inputs:
+                      command: "custom"
+                      customCommand: "run e2e"
+                  continueOnError: true
