@@ -74,7 +74,7 @@ This project is for using Azure pipeline to continuous integration and continuou
 
 ## 6 CI/CD pipeline outcome
 
-![image](./IMG_README/Screenshot%202023-10-08%20at%206.36.36%20pm.png)
+![image](./IMG_README/Screenshot%202023-10-08%20at%209.21.50%20pm.png)
 
 ![image](./IMG_README/Screenshot%202023-10-08%20at%208.18.57%20pm.png)
 

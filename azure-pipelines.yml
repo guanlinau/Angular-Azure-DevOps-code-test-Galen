@@ -47,7 +47,7 @@ variables:
     jdkversion: "JAVA_HOME"
 
     # This value was stored in Variable provided by Azure pipeline for security purpose.
-    sonarCliProjectKey: "guanlinau_Angular-Azure-DevOps-code-test-Galen"
+    # sonarCliProjectKey: "xxx"
 
 stages:
     # Stage is for code compile, Unit testing, testing coverage, Linting
