@@ -50,7 +50,7 @@ variables:
     jdkversion: "JAVA_HOME"
 
     # DAST
-    DAST_dockerServiceConnection: 'angularwebacr-1506'
+    DAST_RegistryServiceConnection: 'angularwebacr-1506'
 
 
 stages:
