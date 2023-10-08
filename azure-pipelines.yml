@@ -48,7 +48,7 @@ stages:
 
     - template: azure-pipeline-templates/deploy-template.yml
       parameters:
-          deployName: $(galen)
+          galen: $(galen)
           imagePullSecret: $(imageSecret)
           angular_web_env: $(uatNamespace)
           replica_number: $(uatReplicasNumber)
