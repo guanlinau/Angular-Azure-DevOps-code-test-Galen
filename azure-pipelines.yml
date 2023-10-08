@@ -1,13 +1,11 @@
 ---
-# trigger:
-#     branches:
-#         include:
-#             - "*"
-
-# pr:
-#     - main
 trigger:
-    - reuable_deploy_pipeline
+    branches:
+        include:
+            - "*"
+
+pr:
+    - main
 
 resources:
     - repo: self
@@ -118,6 +116,7 @@ stages:
     - stage: SAST
       displayName: SAST
       dependsOn: TestAndCodeAnalysis
+      condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
       jobs:
           # This job is for Static application security testing
           - job: Scan_Code_Vulnerabilities
@@ -151,7 +150,7 @@ stages:
     - stage: Build
       displayName: Build and push Docker image
       dependsOn: SAST
-      # condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+      condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
       jobs:
           - job: Build
             displayName: Build and push Docker image stage
@@ -179,7 +178,7 @@ stages:
     # This stage is for Dynamic application security testing
     - stage: DAST
       displayName: DAST
-      # condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+      condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
       dependsOn: Build
       jobs:
           - job: DAST
@@ -223,7 +222,7 @@ stages:
     # Stage-Deploy into Uat environment for User Acceptance Testing and E2E, triggered on Master branch only
     - stage: Deploy_to_UAT
       displayName: Deploy to UAT stage
-      # condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+      condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
       dependsOn: 
         - Build
         - DAST
@@ -289,7 +288,7 @@ stages:
     # Stage-Deploy into Prod environment for end-users, triggered on Master branch and manually approve
     - stage: Deploy_to_Prod
       displayName: Deploy to Prod stage
-      #   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+      condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
       dependsOn: Build
       variables:
           imagePullSecret: $(imageSecret)
@@ -353,7 +352,7 @@ stages:
     # Stage-Conduct E2E test in a deployed environment-Uat env, will be triggered on master branch and on Uat environment only
     - stage: E2E_Tests_UAT
       displayName: Run e2e tests on UAT
-      # condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+      condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
       dependsOn: Deploy_to_UAT
       jobs:
           - job: E2E_Tests
