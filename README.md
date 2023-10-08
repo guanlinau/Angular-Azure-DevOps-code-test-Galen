@@ -147,9 +147,9 @@ This stage is to conduct E2E in a deployed environment, here is the Uat environm
 
 3- I tried to update our project's ChromeDriver using webdriver-manager, but it was version 114.
 
-4- There are might be three ways to figure this issue out, but I can not guarantee it is right, as I actually have done that before.
+4- There are might be three ways to figure this issue out, but I can not guarantee it is right, as I actually have never done that before.
 
-4.1-The first way is to upgrade our project's e2e configuration, so it can be compatible with chrome version 117.
+4.1-The first way is to upgrade our project's e2e configuration, so it can be compatible with chrome version 117. I don't know is it professional? 😊
 
 4.2-The second one is to downgrade the version of microsoft-host ubuntu server using our pipeline. I looked up the documentation, only v24 and v20 available are available as a microsoft-host ubuntu server, and both the chrome version is version 117.
 
