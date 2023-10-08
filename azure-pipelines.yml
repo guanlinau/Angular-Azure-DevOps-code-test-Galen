@@ -53,6 +53,9 @@ variables:
     pollingTimeoutSec: "300"
     jdkversion: "JAVA_HOME"
 
+    # DAST
+    DAST_RegistryServiceConnection: 'angularwebacr-1506'
+
 stages:
     # Stage is for code compile, Unit testing, testing coverage, Linting
     - stage: TestAndCodeAnalysis
@@ -191,8 +194,7 @@ stages:
 
                 - task: Docker@2
                   inputs:
-                      # containerRegistry: "angularwebacr-1506"
-                      containerRegistry: $(containerRegistry)
+                      containerRegistry: $(DAST_RegistryServiceConnection)                     
                       command: "login"
                   displayName: Login to ACR
 
