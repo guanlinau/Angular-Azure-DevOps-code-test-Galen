@@ -166,7 +166,7 @@ stages:
                       containerRegistry: $(dockerRegistryServiceConnection)
                       tags: |
                           $(tag)
-
+                # This step is to publish all the kubernetes configuration files in manifests fold to our pipeline for creating pull image secret in deploy stage
                 - task: PublishPipelineArtifact@1
                   displayName: Publish the manifests folder to pipeline
                   inputs:
@@ -211,6 +211,7 @@ stages:
                       $XslTransform.Load($XslPath)
                       $XslTransform.Transform($XmlInputPath, $XmlOutputPath)
                   displayName: "Owasp Generate Nunit type file"
+
                 - task: PublishTestResults@2
                   displayName: "Publish Test Results"
                   inputs:
