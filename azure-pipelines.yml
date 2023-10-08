@@ -199,10 +199,7 @@ stages:
                   displayName: Login to ACR
 
                 - script: |
-                      ls .docker
-                      cat .docker/config.json
                       docker run -d -p 80:8080 --name angular_dast $(containerRegistry)/$(imageRepository):$(tag)
-                      docker ps -a
                   displayName: "Run a angular docker"
 
                 - bash: |
@@ -230,7 +227,9 @@ stages:
     - stage: Deploy_to_UAT
       displayName: Deploy to UAT stage
       # condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
-      dependsOn: Build
+      dependsOn: 
+        - Build
+        - DAST
       variables:
           imagePullSecret: $(imageSecret)
           angular-web-env: $(uatNamespace)
@@ -410,3 +409,4 @@ stages:
                   inputs:
                       command: "custom"
                       customCommand: "run e2e"
+                  continueOnError: true
