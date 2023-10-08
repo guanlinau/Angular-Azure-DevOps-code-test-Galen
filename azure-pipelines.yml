@@ -288,7 +288,9 @@ stages:
     - stage: Deploy_to_Prod
       displayName: Deploy to Prod stage
       condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
-      dependsOn: Build
+      dependsOn:
+          - Build
+          - DAST
       variables:
           imagePullSecret: $(imageSecret)
           angular-web-env: $(proNamespace)
