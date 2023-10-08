@@ -48,8 +48,7 @@ variables:
     jdkversion: "JAVA_HOME"
 
     # DAST
-    DAST_RegistryServiceConnection: 'angularwebacr-1506'
-
+    DAST_RegistryServiceConnection: "angularwebacr-1506"
 
 stages:
     # Stage is for code compile, Unit testing, testing coverage, Linting
@@ -190,7 +189,7 @@ stages:
 
                 - task: Docker@2
                   inputs:
-                      containerRegistry: $(DAST_RegistryServiceConnection)                     
+                      containerRegistry: $(DAST_RegistryServiceConnection)
                       command: "login"
                   displayName: Login to ACR
 
@@ -223,9 +222,9 @@ stages:
     - stage: Deploy_to_UAT
       displayName: Deploy to UAT stage
       condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
-      dependsOn: 
-        - Build
-        - DAST
+      dependsOn:
+          - Build
+          - DAST
       variables:
           imagePullSecret: $(imageSecret)
           angular-web-env: $(uatNamespace)
