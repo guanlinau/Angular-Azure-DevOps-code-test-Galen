@@ -206,7 +206,7 @@ stages:
                   displayName: "Run a angular docker"
 
                 - bash: |
-                      chmod -R 764  ./
+                      chmod -R 777  ./
                       docker run --rm -v $(pwd):/zap/wrk/:rw -t owasp/zap2docker-stable zap-full-scan.py -t http://$(ip -f inet -o addr show docker0 | awk '{print $4}' | cut -d '/' -f 1):80 -x xml_report.xml
                       true
                   displayName: "Owasp Container Scan"
@@ -292,7 +292,7 @@ stages:
 
     # Stage-Deploy into Prod environment for end-users, triggered on Master branch and manually approve
     - stage: Deploy_to_Prod
-      displayName: Deploy to UAT stage
+      displayName: Deploy to Prod stage
       #   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
       dependsOn: Build
       variables:
