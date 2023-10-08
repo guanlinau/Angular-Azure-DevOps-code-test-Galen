@@ -26,12 +26,15 @@ variables:
 
     # Azure kubernetes service
     imageSecret: "image-key"
+
     uatNamespace: "angular-web-uat"
     proNamespace: "angular-web-pro"
     uatReplicasNumber: 1
     proReplicasNumber: 2
+
     uatEnvironment: "uat.angular-web-uat"
     proEnvironment: "pro.angular-web-pro"
+
     azureSubscriptionEndpoint: "e2e_azureSubscriptionEndpoint"
     resourcesGroupName: "angular-web-sg"
     aksClusterName: "angular-web-aks"
@@ -47,6 +50,8 @@ variables:
     sonarCliProjectKey: "guanlinau_Angular-Azure-DevOps-code-test-Galen"
     sonarCliProjectName: "Angular-Azure-DevOps-code-test-Galen"
     sonarCliSources: "."
+    pollingTimeoutSec: "300"
+    jdkversion: "JAVA_HOME"
 
 stages:
     # Stage is for code compile, Unit testing, testing coverage, Linting
@@ -136,11 +141,11 @@ stages:
                 - task: SonarCloudAnalyze@1
                   displayName: "Run Code Analysis"
                   inputs:
-                      jdkversion: "JAVA_HOME"
+                      jdkversion: $(jdkversion)
                 - task: SonarCloudPublish@1
                   displayName: "Publish Quality Gate Result"
                   inputs:
-                      pollingTimeoutSec: "300"
+                      pollingTimeoutSec: $(pollingTimeoutSec)
 
     # Stage-Build Docker image, versioning images/artifacts and push images/artifacts into ACR, will be triggered on Master branch only
     - stage: Build
@@ -401,4 +406,3 @@ stages:
                   inputs:
                       command: "custom"
                       customCommand: "run e2e"
-                  continueOnError: true
