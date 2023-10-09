@@ -11,12 +11,8 @@ resources:
     - repo: self
 
 variables:
-    dockerRegistryServiceConnection: "453a3951-5cbc-4f12-9589-8ad8592ee4dd"
-    imageRepository: "angularwebdevops"
-    containerRegistry: "angularwebacr.azurecr.io"
     dockerfilePath: $(Build.SourcesDirectory)/Dockerfile
     tag: $(Build.BuildId)
-    imageSecret: "image-key"
     uatNamespace: "angular-web-uat"
     proNamespace: "angular-web-pro"
     uatReplicasNumber: 1
@@ -44,13 +40,20 @@ variables:
     SASTdependsOn: "TestAndCodeAnalysis"
 
     # E2E on Uat environment
-    e2e_azureSubscriptionEndpoint: "e2e_azureSubscriptionEndpoint"
-    resourcesGroupName: "angular-web-sg"
-    aksClusterName: "angular-web-aks"
     clusterServiceName: "angular-web-service"
+
+    # DAST
+    DAST_RegistryServiceConnection: "angularwebacr-1506"
 
     # This value was stored in Variable provided by Azure pipeline for security purpose.
     # sonarCliProjectKey: "xxxx"
+    # dockerRegistryServiceConnection: "xxx"
+    # e2e_azureSubscriptionEndpoint: "xxx"
+    # imageSecret: "xxx"
+    # imageRepository: "xxx"
+    # containerRegistry: "xxx"
+    # resourcesGroupName: "xxx"
+    # aksClusterName: "xxx"
 stages:
     # Stage is for code compile, Unit testing, testing coverage, Linting
     - stage: TestAndCodeAnalysis
