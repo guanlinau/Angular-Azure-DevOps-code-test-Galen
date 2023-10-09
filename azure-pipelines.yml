@@ -15,7 +15,7 @@ variables:
     vmImageName: "ubuntu-latest"
     # Azure Container Registry
     #Container registry service connection established during pipeline creation
-    dockerRegistryServiceConnection: "453a3951-5cbc-4f12-9589-8ad8592ee4dd"
+    # dockerRegistryServiceConnection: "453a3951-5cbc-4f12-9589-8ad8592ee4dd"
     DAST_RegistryServiceConnection: "angularwebacr-1506"
     imageRepository: "angularwebdevops"
     containerRegistry: "angularwebacr.azurecr.io"
