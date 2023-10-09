@@ -143,6 +143,10 @@ This stage is to conduct E2E in a deployed environment, here is the Uat environm
 
 1- In this stage, i used the kubectl to extract the uat environment load balancer Ip, and then use sed to replace the e2e localhost:4200 with that load balancer Ip in protractor.conf.js file. So e2e can conduct testing in the uat environment-a deployed environment.
 
+![image](./IMG_README/Screenshot%202023-10-09%20at%209.33.59%20pm.png)
+
+![image](./IMG_README/Screenshot%202023-10-09%20at%209.33.19%20pm.png)
+
 2- Actually, this stage was failed finally. After done some research and debug, I found the chrome version in the azure pipeline ubuntu server is version 117, while our project's ChromeDriver version is specific to 114.
 
 3- I tried to update our project's ChromeDriver using webdriver-manager, but it was version 114.
