@@ -15,18 +15,11 @@ variables:
     vmImageName: "ubuntu-latest"
     # Azure Container Registry
     #Container registry service connection established during pipeline creation
-    # dockerRegistryServiceConnection: "453a3951-5cbc-4f12-9589-8ad8592ee4dd"
-    DAST_RegistryServiceConnection: "angularwebacr-1506"
-    imageRepository: "angularwebdevops"
-    containerRegistry: "angularwebacr.azurecr.io"
-    azureSubscriptionEndpoint: "e2e_azureSubscriptionEndpoint"
-    resourcesGroupName: "angular-web-sg"
-    aksClusterName: "angular-web-aks"
+
     clusterServiceName: "angular-web-service"
     dockerfilePath: "$(Build.SourcesDirectory)/Dockerfile"
     tag: "$(Build.BuildId)"
     # Azure kubernetes service
-    imageSecret: "image-key"
     uatNamespace: "angular-web-uat"
     proNamespace: "angular-web-pro"
     uatReplicasNumber: 1
@@ -46,8 +39,16 @@ variables:
     pollingTimeoutSec: "300"
     jdkversion: "JAVA_HOME"
 
-    # This value was stored in Variable provided by Azure pipeline for security purpose.
+    # The values of these variables listed below ware stored in Variables provided by Azure pipeline for security purpose.
     # sonarCliProjectKey: "xxx"
+    # dockerRegistryServiceConnection: "xxx"
+    # DAST_RegistryServiceConnection: "xxx"
+    # azureSubscriptionEndpoint: "xxx"
+    # imageSecret: "xxx"
+    # imageRepository: "xxx"
+    # containerRegistry: "xxx"
+    # resourcesGroupName: "xxx"
+    # aksClusterName: "xxx"
 
 stages:
     # Stage is for code compile, Unit testing, testing coverage, Linting
