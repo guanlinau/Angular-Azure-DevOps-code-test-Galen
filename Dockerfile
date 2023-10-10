@@ -8,7 +8,7 @@ RUN npm install
 
 # Copy source code and build code for production
 COPY ./ ./
-RUN npm run build
+RUN npm run build --prod
 
 # Running stage
 FROM nginx:1.25.2-alpine
