@@ -72,6 +72,8 @@ stages:
 
                        ls -a
                        sudo dpkg -i google-chrome-stable_114.0.5735.90-1_amd64.deb
+                       google-chrome --version
+
                   displayName: "test"
                 - task: Npm@1
                   inputs:
