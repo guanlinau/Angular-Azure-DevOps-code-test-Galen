@@ -71,6 +71,7 @@ stages:
                        wget http://mirror.cs.uchicago.edu/google-chrome/pool/main/g/google-chrome-stable/google-chrome-stable_114.0.5735.90-1_amd64.deb
 
                        ls -a
+                       sudo dpkg -i google-chrome-stable_114.0.5735.90-1_amd64.deb
                   displayName: "test"
                 - task: Npm@1
                   inputs:
