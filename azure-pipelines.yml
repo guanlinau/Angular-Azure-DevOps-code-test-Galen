@@ -397,10 +397,16 @@ stages:
                 #  So it can align with the chrome driver version in ubuntu server of the azure pipeline
                 - script: |
                       # Ubuntu chrome version
-                        google-chrome --version
+                      # downgrade ubuntu chrome version to 114.0.5735.90
+                       wget http://mirror.cs.uchicago.edu/google-chrome/pool/main/g/google-chrome-stable/google-chrome-stable_114.0.5735.90-1_amd64.deb
+
+                       ls -a
+                       sudo dpkg -i google-chrome-stable_114.0.5735.90-1_amd64.deb
+                       google-chrome --version
+
                       node node_modules/.bin/webdriver-manager update --gecko false
                       node node_modules/.bin/webdriver-manager status
-                  displayName: "update project chrome version"
+                  displayName: "downgradte ubuntu chrome version"
 
                 - task: Npm@1
                   displayName: Run e2e tests
