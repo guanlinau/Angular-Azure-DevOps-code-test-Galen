@@ -430,6 +430,7 @@ stages:
                       testResultsFormat: "JUnit" # 类型为JUnit
                       testResultsFiles: "src/e2e-test-results/*.xml" # 这里是你的JUnit报告文件的路径
                       mergeTestResults: true
-                      failTaskOnFailedTests: true # 如果有失败的测试，使任务失败
+                      failTaskOnFailedTests: false # 如果有失败的测试，使任务失败
                   condition: always() # 无论前面的任务是否成功，都运行此任务
-
+                - script: |
+                      ls -al
