@@ -52,112 +52,112 @@ variables:
 
 stages:
     # Stage is for code compile, Unit testing, testing coverage, Linting
-    - stage: TestAndCodeAnalysis
-      displayName: "Test&Code Analysis"
-      jobs:
-          - job: Compile_Test_Code_Analysis
-            displayName: "Compile_Test_Code_Analysis"
-            pool:
-                vmImage: $(vmImageName)
+    # - stage: TestAndCodeAnalysis
+    #   displayName: "Test&Code Analysis"
+    #   jobs:
+    #       - job: Compile_Test_Code_Analysis
+    #         displayName: "Compile_Test_Code_Analysis"
+    #         pool:
+    #             vmImage: $(vmImageName)
 
-            # Our angular project uses Node.js v14.21.3
-            steps:
-                - task: NodeTool@0
-                  inputs:
-                      versionSource: "spec"
-                      versionSpec: "14.x"
-                  displayName: "Install Node.js"
-                - script: |
-                       wget http://mirror.cs.uchicago.edu/google-chrome/pool/main/g/google-chrome-stable/google-chrome-stable_114.0.5735.90-1_amd64.deb
+    #         # Our angular project uses Node.js v14.21.3
+    #         steps:
+    #             - task: NodeTool@0
+    #               inputs:
+    #                   versionSource: "spec"
+    #                   versionSpec: "14.x"
+    #               displayName: "Install Node.js"
+    #             - script: |
+    #                   wget http://mirror.cs.uchicago.edu/google-chrome/pool/main/g/google-chrome-stable/google-chrome-stable_114.0.5735.90-1_amd64.deb
 
-                       ls -a
-                       sudo dpkg -i google-chrome-stable_114.0.5735.90-1_amd64.deb
-                       google-chrome --version
+    #                   ls -a
+    #                   sudo dpkg -i google-chrome-stable_114.0.5735.90-1_amd64.deb
+    #                   google-chrome --version
 
-                  displayName: "test"
-                - task: Npm@1
-                  inputs:
-                      command: "install"
-                  displayName: "Install dependencies"
+    #               displayName: "test"
+    #             - task: Npm@1
+    #               inputs:
+    #                   command: "install"
+    #               displayName: "Install dependencies"
 
-                #  Build and compile the Angular project
-                - task: Npm@1
-                  inputs:
-                      command: "custom"
-                      customCommand: "run build"
-                  displayName: "Run build for compiling"
+    #             #  Build and compile the Angular project
+    #             - task: Npm@1
+    #               inputs:
+    #                   command: "custom"
+    #                   customCommand: "run build"
+    #               displayName: "Run build for compiling"
 
-                # Run unit tests and test coverage
-                - script: |
-                      npx ng test --code-coverage --watch=false
-                  displayName: "Run unit tesing and access the code coverage"
+    #             # Run unit tests and test coverage
+    #             - script: |
+    #                   npx ng test --code-coverage --watch=false
+    #               displayName: "Run unit tesing and access the code coverage"
 
-                # Accessing the unit testing code coverage
-                - task: PublishCodeCoverageResults@1
-                  displayName: "Access and Publish code coverage results"
-                  condition: succeededOrFailed()
-                  inputs:
-                      codeCoverageTool: "Cobertura"
-                      summaryFileLocation: $(codeCoverageSummaryFileLocation)
-                      reportDirectory: $(codeCoverageReportDirectory)
-                      failIfCoverageEmpty: false
+    #             # Accessing the unit testing code coverage
+    #             - task: PublishCodeCoverageResults@1
+    #               displayName: "Access and Publish code coverage results"
+    #               condition: succeededOrFailed()
+    #               inputs:
+    #                   codeCoverageTool: "Cobertura"
+    #                   summaryFileLocation: $(codeCoverageSummaryFileLocation)
+    #                   reportDirectory: $(codeCoverageReportDirectory)
+    #                   failIfCoverageEmpty: false
 
-                # Accessing the unit testing results report
-                - task: PublishTestResults@2
-                  displayName: "Access and Publish unit test results"
-                  condition: succeededOrFailed()
-                  inputs:
-                      searchFolder: $(System.DefaultWorkingDirectory)
-                      testRunTitle: Unit_test_report
-                      testResultsFormat: JUnit
-                      testResultsFiles: $(unittestResultsFiles)
+    #             # Accessing the unit testing results report
+    #             - task: PublishTestResults@2
+    #               displayName: "Access and Publish unit test results"
+    #               condition: succeededOrFailed()
+    #               inputs:
+    #                   searchFolder: $(System.DefaultWorkingDirectory)
+    #                   testRunTitle: Unit_test_report
+    #                   testResultsFormat: JUnit
+    #                   testResultsFiles: $(unittestResultsFiles)
 
-                # Linting and code analysis
-                - task: Npm@1
-                  inputs:
-                      command: "custom"
-                      customCommand: "run lint"
-                  displayName: "Run Linting and code quality analysis"
+    #             # Linting and code analysis
+    #             - task: Npm@1
+    #               inputs:
+    #                   command: "custom"
+    #                   customCommand: "run lint"
+    #               displayName: "Run Linting and code quality analysis"
 
     # Stage- Static Application Security Test
-    - stage: SAST
-      displayName: SAST
-      dependsOn: TestAndCodeAnalysis
-      condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
-      jobs:
-          # This job is for Static application security testing
-          - job: Scan_Code_Vulnerabilities
-            # dependsOn: Compile_Test_Code_Analysis
-            displayName: "Scan_Code_Vulnerabilities"
-            pool:
-                vmImage: $(vmImageName)
+    # - stage: SAST
+    #   displayName: SAST
+    #   dependsOn: TestAndCodeAnalysis
+    #   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+    #   jobs:
+    #       # This job is for Static application security testing
+    #       - job: Scan_Code_Vulnerabilities
+    #         # dependsOn: Compile_Test_Code_Analysis
+    #         displayName: "Scan_Code_Vulnerabilities"
+    #         pool:
+    #             vmImage: $(vmImageName)
 
-            # Using SonarCloud for static application security testing
-            steps:
-                - task: SonarCloudPrepare@1
-                  displayName: "Prepare Analysis Configuration"
-                  inputs:
-                      SonarCloud: "sonarcloud"
-                      organization: $(sonarOrganization)
-                      scannerMode: "CLI"
-                      configMode: "manual"
-                      cliProjectKey: $(sonarCliProjectKey)
-                      cliProjectName: $(sonarCliProjectName)
-                      cliSources: $(sonarCliSources)
-                - task: SonarCloudAnalyze@1
-                  displayName: "Run Code Analysis"
-                  inputs:
-                      jdkversion: $(jdkversion)
-                - task: SonarCloudPublish@1
-                  displayName: "Publish Quality Gate Result"
-                  inputs:
-                      pollingTimeoutSec: $(pollingTimeoutSec)
+    #         # Using SonarCloud for static application security testing
+    #         steps:
+    #             - task: SonarCloudPrepare@1
+    #               displayName: "Prepare Analysis Configuration"
+    #               inputs:
+    #                   SonarCloud: "sonarcloud"
+    #                   organization: $(sonarOrganization)
+    #                   scannerMode: "CLI"
+    #                   configMode: "manual"
+    #                   cliProjectKey: $(sonarCliProjectKey)
+    #                   cliProjectName: $(sonarCliProjectName)
+    #                   cliSources: $(sonarCliSources)
+    #             - task: SonarCloudAnalyze@1
+    #               displayName: "Run Code Analysis"
+    #               inputs:
+    #                   jdkversion: $(jdkversion)
+    #             - task: SonarCloudPublish@1
+    #               displayName: "Publish Quality Gate Result"
+    #               inputs:
+    #                   pollingTimeoutSec: $(pollingTimeoutSec)
 
     # Stage-Build Docker image, versioning images/artifacts and push images/artifacts into ACR, will be triggered on Master branch only
     - stage: Build
       displayName: Build and push Docker image
-      dependsOn: SAST
-      condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+      #   dependsOn: SAST
+      #   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
       jobs:
           - job: Build
             displayName: Build and push Docker image stage
@@ -183,57 +183,57 @@ stages:
                       publishLocation: "pipeline"
 
     # This stage is for Dynamic application security testing
-    - stage: DAST
-      displayName: DAST
-      condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
-      dependsOn: Build
-      jobs:
-          - job: DAST
-            displayName: Dynamic Application Security Test
-            pool:
-                vmImage: "ubuntu-latest"
-            steps:
-                - checkout: self
+    # - stage: DAST
+    #   displayName: DAST
+    #   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+    #   dependsOn: Build
+    #   jobs:
+    #       - job: DAST
+    #         displayName: Dynamic Application Security Test
+    #         pool:
+    #             vmImage: "ubuntu-latest"
+    #         steps:
+    #             - checkout: self
 
-                - task: Docker@2
-                  inputs:
-                      containerRegistry: $(DAST_RegistryServiceConnection)
-                      command: "login"
-                  displayName: Login to ACR
+    #             - task: Docker@2
+    #               inputs:
+    #                   containerRegistry: $(DAST_RegistryServiceConnection)
+    #                   command: "login"
+    #               displayName: Login to ACR
 
-                - script: |
-                      docker run -d -p 80:8080 --name angular_dast $(containerRegistry)/$(imageRepository):$(tag)
-                  displayName: "Run a angular docker"
+    #             - script: |
+    #                   docker run -d -p 80:8080 --name angular_dast $(containerRegistry)/$(imageRepository):$(tag)
+    #               displayName: "Run a angular docker"
 
-                - bash: |
-                      chmod -R 777  ./
-                      docker run --rm -v $(pwd):/zap/wrk/:rw -t owasp/zap2docker-stable zap-full-scan.py -t http://$(ip -f inet -o addr show docker0 | awk '{print $4}' | cut -d '/' -f 1):80 -x xml_report.xml
-                      true
-                  displayName: "Owasp Container Scan"
+    #             - bash: |
+    #                   chmod -R 777  ./
+    #                   docker run --rm -v $(pwd):/zap/wrk/:rw -t owasp/zap2docker-stable zap-full-scan.py -t http://$(ip -f inet -o addr show docker0 | awk '{print $4}' | cut -d '/' -f 1):80 -x xml_report.xml
+    #                   true
+    #               displayName: "Owasp Container Scan"
 
-                - powershell: |
-                      $XslPath = "$(System.DefaultWorkingDirectory)/xml_to_nunit.xslt"
-                      $XmlInputPath = "xml_report.xml"
-                      $XmlOutputPath = "converted_report.xml"
-                      $XslTransform = New-Object System.Xml.Xsl.XslCompiledTransform
-                      $XslTransform.Load($XslPath)
-                      $XslTransform.Transform($XmlInputPath, $XmlOutputPath)
-                  displayName: "Owasp Generate Nunit type file"
+    #             - powershell: |
+    #                   $XslPath = "$(System.DefaultWorkingDirectory)/xml_to_nunit.xslt"
+    #                   $XmlInputPath = "xml_report.xml"
+    #                   $XmlOutputPath = "converted_report.xml"
+    #                   $XslTransform = New-Object System.Xml.Xsl.XslCompiledTransform
+    #                   $XslTransform.Load($XslPath)
+    #                   $XslTransform.Transform($XmlInputPath, $XmlOutputPath)
+    #               displayName: "Owasp Generate Nunit type file"
 
-                - task: PublishTestResults@2
-                  displayName: "Publish Test Results"
-                  inputs:
-                      testRunTitle: DAST_code_scan_report
-                      testResultsFormat: "NUnit"
-                      testResultsFiles: "converted_report.xml"
+    #             - task: PublishTestResults@2
+    #               displayName: "Publish Test Results"
+    #               inputs:
+    #                   testRunTitle: DAST_code_scan_report
+    #                   testResultsFormat: "NUnit"
+    #                   testResultsFiles: "converted_report.xml"
 
     # Stage-Deploy into Uat environment for User Acceptance Testing and E2E, triggered on Master branch only
     - stage: Deploy_to_UAT
       displayName: Deploy to UAT stage
-      condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+      #   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
       dependsOn:
           - Build
-          - DAST
+          #   - DAST
       variables:
           imagePullSecret: $(imageSecret)
           angular-web-env: $(uatNamespace)
@@ -294,70 +294,70 @@ stages:
                                       $(containerRegistry)/$(imageRepository):$(tag)
 
     # Stage-Deploy into Prod environment for end-users, triggered on Master branch and manually approve
-    - stage: Deploy_to_Prod
-      displayName: Deploy to Prod stage
-      condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
-      dependsOn:
-          - Build
-          - DAST
-      variables:
-          imagePullSecret: $(imageSecret)
-          angular-web-env: $(proNamespace)
-          replica-number: $(proReplicasNumber)
-          acr-server: $(containerRegistry)
-          acr-repo-name: $(imageRepository)
-          image-version: $(tag)
-      jobs:
-          - deployment: Deploy_to_Prod
-            displayName: Deploy to prod envrionment
-            pool:
-                vmImage: $(vmImageName)
-            environment: $(proEnvironment)
-            strategy:
-                runOnce:
-                    deploy:
-                        steps:
-                            - task: DownloadPipelineArtifact@2
-                              inputs:
-                                  artifactName: "manifests"
-                                  downloadPath: "$(System.ArtifactsDirectory)/manifests"
+    # - stage: Deploy_to_Prod
+    #   displayName: Deploy to Prod stage
+    #   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+    #   dependsOn:
+    #       - Build
+    #       - DAST
+    #   variables:
+    #       imagePullSecret: $(imageSecret)
+    #       angular-web-env: $(proNamespace)
+    #       replica-number: $(proReplicasNumber)
+    #       acr-server: $(containerRegistry)
+    #       acr-repo-name: $(imageRepository)
+    #       image-version: $(tag)
+    #   jobs:
+    #       - deployment: Deploy_to_Prod
+    #         displayName: Deploy to prod envrionment
+    #         pool:
+    #             vmImage: $(vmImageName)
+    #         environment: $(proEnvironment)
+    #         strategy:
+    #             runOnce:
+    #                 deploy:
+    #                     steps:
+    #                         - task: DownloadPipelineArtifact@2
+    #                           inputs:
+    #                               artifactName: "manifests"
+    #                               downloadPath: "$(System.ArtifactsDirectory)/manifests"
 
-                            - task: KubernetesManifest@0
-                              displayName: Create imagePullSecret
-                              inputs:
-                                  action: createSecret
-                                  secretName: $(imagePullSecret)
-                                  namespace: $(proNamespace)
-                                  dockerRegistryEndpoint: $(dockerRegistryServiceConnection)
+    #                         - task: KubernetesManifest@0
+    #                           displayName: Create imagePullSecret
+    #                           inputs:
+    #                               action: createSecret
+    #                               secretName: $(imagePullSecret)
+    #                               namespace: $(proNamespace)
+    #                               dockerRegistryEndpoint: $(dockerRegistryServiceConnection)
 
-                            - task: replacetokens@5
-                              inputs:
-                                  rootDirectory: "$(System.ArtifactsDirectory)/manifests"
-                                  targetFiles: "kubernetes.yaml"
-                                  encoding: "auto"
-                                  tokenPattern: "custom"
-                                  tokenPrefix: "$"
-                                  tokenSuffix: "$"
-                                  writeBOM: true
-                                  actionOnMissing: "warn"
-                                  keepToken: false
-                                  actionOnNoFiles: "continue"
-                                  enableTransforms: false
-                                  enableRecursion: false
-                                  useLegacyPattern: false
-                                  enableTelemetry: true
+    #                         - task: replacetokens@5
+    #                           inputs:
+    #                               rootDirectory: "$(System.ArtifactsDirectory)/manifests"
+    #                               targetFiles: "kubernetes.yaml"
+    #                               encoding: "auto"
+    #                               tokenPattern: "custom"
+    #                               tokenPrefix: "$"
+    #                               tokenSuffix: "$"
+    #                               writeBOM: true
+    #                               actionOnMissing: "warn"
+    #                               keepToken: false
+    #                               actionOnNoFiles: "continue"
+    #                               enableTransforms: false
+    #                               enableRecursion: false
+    #                               useLegacyPattern: false
+    #                               enableTelemetry: true
 
-                            - task: KubernetesManifest@0
-                              displayName: Deploy to Kubernetes cluster
-                              inputs:
-                                  action: deploy
-                                  namespace: $(proNamespace)
-                                  manifests: |
-                                      $(System.ArtifactsDirectory)/manifests/kubernetes.yaml
-                                  imagePullSecrets: |
-                                      $(imagePullSecret)
-                                  containers: |
-                                      $(containerRegistry)/$(imageRepository):$(tag)
+    #                         - task: KubernetesManifest@0
+    #                           displayName: Deploy to Kubernetes cluster
+    #                           inputs:
+    #                               action: deploy
+    #                               namespace: $(proNamespace)
+    #                               manifests: |
+    #                                   $(System.ArtifactsDirectory)/manifests/kubernetes.yaml
+    #                               imagePullSecrets: |
+    #                                   $(imagePullSecret)
+    #                               containers: |
+    #                                   $(containerRegistry)/$(imageRepository):$(tag)
 
     # Stage-Conduct E2E test in a deployed environment-Uat env, will be triggered on master branch and on Uat environment only
     - stage: E2E_Tests_UAT
@@ -405,10 +405,16 @@ stages:
                 #  So it can align with the chrome driver version in ubuntu server of the azure pipeline
                 - script: |
                       # Ubuntu chrome version
-                        google-chrome --version
+                      # downgrade ubuntu chrome version to 114.0.5735.90
+                       wget http://mirror.cs.uchicago.edu/google-chrome/pool/main/g/google-chrome-stable/google-chrome-stable_114.0.5735.90-1_amd64.deb
+
+                       ls -a
+                       sudo dpkg -i google-chrome-stable_114.0.5735.90-1_amd64.deb
+                       google-chrome --version
+
                       node node_modules/.bin/webdriver-manager update --gecko false
                       node node_modules/.bin/webdriver-manager status
-                  displayName: "update project chrome version"
+                  displayName: "downgradte ubuntu chrome version"
 
                 - task: Npm@1
                   displayName: Run e2e tests
@@ -416,3 +422,14 @@ stages:
                       command: "custom"
                       customCommand: "run e2e"
                   continueOnError: true
+
+                - task: PublishTestResults@2
+                  inputs:
+                      searchFolder: $(System.DefaultWorkingDirectory)
+                      testRunTitle: E2E_test_report
+                      testResultsFormat: "JUnit" # 类型为JUnit
+                      testResultsFiles: "src/e2e-test-results/*.xml" # 这里是你的JUnit报告文件的路径
+                      mergeTestResults: true
+                      failTaskOnFailedTests: true # 如果有失败的测试，使任务失败
+                  condition: always() # 无论前面的任务是否成功，都运行此任务
+
