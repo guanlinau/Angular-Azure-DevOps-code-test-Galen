@@ -67,6 +67,11 @@ stages:
                       versionSource: "spec"
                       versionSpec: "14.x"
                   displayName: "Install Node.js"
+                - script: |
+                      apt-cache showpkg google-chrome-stable
+                      sudo apt-mark hold google-chrome-stable
+                  #   sudo apt install google-chrome-stable=117.0.5938.149
+                  displayName: "test"
                 - task: Npm@1
                   inputs:
                       command: "install"
