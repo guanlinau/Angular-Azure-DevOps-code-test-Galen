@@ -68,7 +68,8 @@ stages:
                       versionSpec: "14.x"
                   displayName: "Install Node.js"
                 - script: |
-                       wget https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_114.0.*.*_amd64.deb
+                       wget https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_114.0.5735.90_amd64.deb
+
                        ls -a
                   displayName: "test"
                 - task: Npm@1
