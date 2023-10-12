@@ -414,3 +414,14 @@ stages:
                       command: "custom"
                       customCommand: "run e2e"
                   continueOnError: true
+                - task: PublishTestResults@2
+                  inputs:
+                      searchFolder: $(System.DefaultWorkingDirectory)
+                      testRunTitle: E2E_test_report
+                      testResultsFormat: "JUnit" # 类型为JUnit
+                      testResultsFiles: "./e2e-test-results/*.xml" # 这里是你的JUnit报告文件的路径
+                      mergeTestResults: true
+                      failTaskOnFailedTests: false # 如果有失败的测试，使任务失败
+                  condition: always() # 无论前面的任务是否成功，都运行此任务
+                - script: |
+                      ls -al
